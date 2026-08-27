@@ -60,14 +60,14 @@
 - [x] Evaluate credential-session signing options; the project will use the existing managed secret at the owner's direction rather than add a separate secret.
 - [x] Relax the incompatible session-secret length check while retaining signed credential-session login validation.
 - [x] Add an authenticated `auth.login` procedure test that verifies a pre-provisioned account receives a valid credential session and that the session resolves through the server context.
-- [ ] Verify a real institution login and authenticated follow-up page access after the managed-secret compatibility fix.
-- [ ] Ensure a valid institution credential session takes precedence over any existing Super Admin browser session.
+- [x] Verify a real institution login and authenticated follow-up page access after the managed-secret compatibility fix.
+- [x] Ensure a valid institution credential session takes precedence over any existing Super Admin browser session.
 - [x] Fix Teacher MCQ authoring validation so short legitimate content is accepted and four answer options are supported.
 - [x] Ensure published assessments are visible to eligible assigned students within the institution scope.
 - [x] Repair Excel roster import header mapping, normalization, and preview/confirm persistence.
 - [x] Verify Teacher role session context and remove the remaining 403 caused by stale or incorrect identity state.
 - [x] Re-run automated tests, production build, and package a fresh ZIP after the Teacher workflow fixes.
-- [ ] Restore Super Admin owner access after institution credential-session mode is cleared or absent, without weakening tenant role boundaries.
+- [x] Restore Super Admin owner access after institution credential-session mode is cleared or absent, without weakening tenant role boundaries.
 - [x] Replace Super Admin Google/OAuth access with a dedicated email-password owner login and managed credential secret.
 - [x] Add secure Super Admin credential session procedures and prevent institution roles from using the owner login.
 - [x] Ensure direct route entry and internal navigation resolve `/super-admin`, `/admin`, `/teacher`, and `/student` reliably.
