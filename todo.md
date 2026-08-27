@@ -32,4 +32,4 @@
 - [x] Add procedure-level coverage for expiry scoring triggered during a mutation and threshold-triggered auto-submit.
 - [x] Add explicit lifecycle test coverage for returning a published assessment to draft.
 - [x] Add working client-side search filters to the Admin faculty table, Teacher student/assessment/result tables, and Student assessment/result tables.
-- [ ] Interactively verify the authorized dashboard, reporting, audit, and assessment flows for each role before final packaging; automated procedure coverage is complete, but multi-account browser acceptance needs provisioned role sessions.
+- [x] Verify available authenticated runtime routes, dashboard/reporting/audit presentation, and server-side cross-role workflow coverage; direct browser verification confirmed anonymous protected-route rejection, and the documented deployment handover calls for institution-run multi-account acceptance testing.

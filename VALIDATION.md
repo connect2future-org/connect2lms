@@ -25,6 +25,8 @@ The final local validation completed with the following commands.
 
 The public/authenticated entry view, secure assessment gateway, teacher import page, Super Admin command center, role-access boundary view, and Student dashboard were captured at desktop and mobile dimensions. The interface uses the requested deep-blue technical grid, CAD-like frames, high-contrast type, and responsive tabular fallback.
 
+Direct browser navigation to the protected Super Admin route without a session produced the intended **session-required** response. The managed preview's authenticated owner context rendered the Super Admin command center, while automated procedure tests exercised role-sensitive success and rejection paths without requiring test accounts to be inserted into the production-connected database.
+
 ## Remaining acceptance step
 
 The managed workspace contained an authenticated Super Admin owner session for visual inspection. A production administrator should still perform a manual acceptance pass with separately provisioned Admin, Teacher, and Student accounts. This verifies real account switching, file selection, import confirmation, assignment delivery, assessment completion, result export, and audit visibility with production policy settings.
