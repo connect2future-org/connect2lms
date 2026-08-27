@@ -2,7 +2,6 @@ import { BookOpenCheck, Building2, ClipboardCheck, GraduationCap, LogOut, Shield
 import { Link, useLocation } from "wouter";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
-import { startLogin } from "@/const";
 
 const roleConfig = {
   SUPER_ADMIN: { title: "Platform command", label: "SUPER ADMIN", icon: ShieldCheck, home: "/super-admin", links: [{ label: "Institution registry", href: "/super-admin", icon: Building2 }] },
@@ -16,7 +15,7 @@ export function BlueprintShell({ role, children }: { role: keyof typeof roleConf
   const auth = trpc.auth.me.useQuery();
   const logout = trpc.auth.logout.useMutation({ onSuccess: () => { try { sessionStorage.removeItem("lms-credential-session"); sessionStorage.removeItem("manus-cookie"); localStorage.removeItem("manus-runtime-user-info"); } catch {} utils.auth.me.setData(undefined, null); toast.success("Signed out."); navigate("/"); } });
   const config = roleConfig[role]; const Icon = config.icon;
-  const switchToOwner = () => { try { sessionStorage.removeItem("lms-credential-session"); sessionStorage.removeItem("manus-cookie"); localStorage.removeItem("manus-runtime-user-info"); } catch {} startLogin(); };
+  const switchToOwner = () => { try { sessionStorage.removeItem("lms-credential-session"); sessionStorage.removeItem("manus-cookie"); localStorage.removeItem("manus-runtime-user-info"); } catch {} navigate("/super-admin/login"); };
   if (auth.isLoading) return <main className="blueprint-surface flex min-h-screen items-center justify-center text-blue-100">Loading authenticated workspace…</main>;
   if (!auth.data) return <main className="blueprint-surface flex min-h-screen items-center justify-center p-6"><div className="blueprint-panel max-w-md p-7"><p className="eyebrow">SESSION REQUIRED</p><h1 className="mt-2 text-2xl font-semibold text-white">Sign in to access this workspace.</h1>{role === "SUPER_ADMIN" ? <button onClick={switchToOwner} className="mt-5 inline-flex rounded-lg bg-cyan-300 px-4 py-2.5 text-sm font-bold text-[#05205c]">Sign in as Super Admin</button> : <Link href="/" className="mt-5 inline-flex rounded-lg bg-cyan-300 px-4 py-2.5 text-sm font-bold text-[#05205c]">Return to sign in</Link>}</div></main>;
   if (auth.data.role !== role) return <main className="blueprint-surface flex min-h-screen items-center justify-center p-6"><div className="blueprint-panel max-w-md p-7"><p className="eyebrow">ACCESS BOUNDARY</p><h1 className="mt-2 text-2xl font-semibold text-white">This workspace is not assigned to your role.</h1>{role === "SUPER_ADMIN" ? <button onClick={switchToOwner} className="mt-5 inline-flex rounded-lg bg-cyan-300 px-4 py-2.5 text-sm font-bold text-[#05205c]">Switch to Super Admin sign-in</button> : <Link href={roleConfig[auth.data.role].home} className="mt-5 inline-flex rounded-lg bg-cyan-300 px-4 py-2.5 text-sm font-bold text-[#05205c]">Open assigned workspace</Link>}</div></main>;

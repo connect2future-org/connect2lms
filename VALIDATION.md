@@ -43,3 +43,9 @@ The latest automated run passed `pnpm check`, all regular tests (12 files, 30 as
 The role boundary now provides a dedicated **Switch to Super Admin sign-in** action when an institution session is active on the Super Admin route. It clears the institution-session mode and preview bearer token before starting the owner-only OAuth flow. This prevents a stale Admin or Teacher identity from blocking the owner workspace while preserving server-side role checks.
 
 The latest validation passed `pnpm check`, `pnpm test` with 13 test files and 31 assertions (3 live-Atlas assertions intentionally skipped), and `pnpm build`.
+
+## Dedicated Super Admin authentication and routing
+
+Super Admin access now uses the managed `SUPER_ADMIN_EMAIL` and `SUPER_ADMIN_PASSWORD` secrets through `/super-admin/login`; the Google/OAuth owner fallback is no longer used by the application request context. A successful owner login issues the same signed application session format, but only with the `SUPER_ADMIN` role. Institution credentials cannot call the owner procedure. Direct navigation to `/super-admin/login`, `/super-admin`, `/admin`, `/teacher`, and `/student` is registered in the client router, and the public home page includes a dedicated **Platform owner sign in** entry point.
+
+The dedicated owner secret health check, owner-login session round trip, role-context checks, all regular tests (14 files, 33 assertions), TypeScript check, and production build passed. Actual owner credential submission in the browser remains a manual acceptance action because it requires the private managed secret.

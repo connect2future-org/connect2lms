@@ -18,3 +18,13 @@ export async function getUserById(id: number) { const db = await getMongoDb(); r
 export async function getUserByLogin(identifier: string) { const db = await getMongoDb(); const normalized = identifier.trim().toLowerCase(); return collections(db).users.findOne({ $or: [{ email: normalized }, { username: identifier.trim() }] }); }
 export async function getCredentialUser(input: { institutionCode: string; identifier: string; role: Exclude<LmsUser["role"], "SUPER_ADMIN"> }) { return findProvisionedCredentialUser(input); }
 export function publicUser(user: LmsUser) { return { id: user.id, name: user.name, email: user.email, username: user.username, role: user.role, schoolId: user.schoolId, teacherId: user.teacherId, status: user.status, lastLogin: user.lastLogin, createdAt: user.createdAt }; }
+
+export async function getOrCreateOwnerCredentialUser(email: string): Promise<LmsUser> {
+  const db = await getMongoDb(); const c = collections(db); const normalizedEmail = email.trim().toLowerCase();
+  const existing = await c.users.findOne({ email: normalizedEmail, role: "SUPER_ADMIN" });
+  if (existing) return existing;
+  const now = new Date();
+  const owner: LmsUser = { id: await nextId(db, "users"), openId: `credential-owner:${normalizedEmail}`, name: "Platform Owner", email: normalizedEmail, loginMethod: "credentials", username: null, passwordHash: null, role: "SUPER_ADMIN", schoolId: null, teacherId: null, status: "ACTIVE", lastLogin: null, createdAt: now, updatedAt: now, lastSignedIn: now };
+  await c.users.insertOne(owner);
+  return owner;
+}

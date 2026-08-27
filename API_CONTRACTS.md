@@ -7,7 +7,8 @@ The application exposes typed Express-hosted procedures under `/api/trpc`. Mongo
 | Procedure | Access | Required input | Result | Key rule |
 |---|---|---|---|---|
 | `auth.login` | Public, provisioned users only | `role`, `institutionCode`, `identifier`, `password` | Signed session and public user profile | Only `ADMIN`, `TEACHER`, and `STUDENT` are accepted. No account is created. |
-| `auth.me` | Public | None | Current session profile or `null` | The Super Admin is owner-authenticated, not a public credential login. |
+| `auth.ownerLogin` | Public, owner credentials only | `email`, `password` | Signed Super Admin session and owner profile | Dedicated managed email/password; institution credentials cannot use this entry point. |
+| `auth.me` | Public | None | Current session profile or `null` | Resolves the signed Super Admin or institution credential session. |
 | `auth.logout` | Public | None | Success acknowledgement | Clears only the signed application session. |
 | `platform.schools.create` | `SUPER_ADMIN` | Institution profile and initial Admin identity | New institution, generated code, and public Admin profile | The temporary password is hashed and never returned. |
 | `platform.schools.setStatus` | `SUPER_ADMIN` | `schoolId`, status | Updated status | Institution state is enforced at the credential lookup boundary. |

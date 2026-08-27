@@ -6,7 +6,7 @@ Northstar is a **commercial multi-tenant assessment platform** for schools and c
 
 | Actor | Account provisioner | Login requirements | Server-enforced scope |
 |---|---|---|---|
-| Super Admin | Platform owner only | Owner-authenticated session; no public sign-up | All provisioned institutions |
+| Super Admin | Platform owner only | Dedicated managed email and password; no public sign-up | All provisioned institutions |
 | Institution Admin | Super Admin | Institution code, issued email/username, password | One school or college |
 | Teacher | Institution Admin | Institution code, issued email/username, password | Own institution, own roster, own assessments |
 | Student | Teacher, manually or by import | Institution code, issued username, USN, or roll number, plus password | Own assigned assessments and attempts |
@@ -27,7 +27,7 @@ Northstar is a **commercial multi-tenant assessment platform** for schools and c
 
 ## MongoDB Atlas setup
 
-The application requires a secure MongoDB Atlas URI configured as `MONGODB_URI` through the deployment environment's secret manager. Do not commit a `.env` file or a connection string. The Atlas user should have only the privileges needed by the target database, and the Atlas Network Access list must permit the deployed application environment.
+The application requires a secure MongoDB Atlas URI configured as `MONGODB_URI` through the deployment environment's secret manager. Dedicated owner login also requires `SUPER_ADMIN_EMAIL` and `SUPER_ADMIN_PASSWORD` in the same secret manager; neither value is bundled into the client or committed to source. Do not commit a `.env` file or a connection string. The Atlas user should have only the privileges needed by the target database, and the Atlas Network Access list must permit the deployed application environment.
 
 After setting the secret, install dependencies and create or upgrade the required indexes:
 
@@ -66,7 +66,7 @@ RUN_MONGO_INTEGRATION=true pnpm vitest run server/mongo.constraints.integration.
 
 ## First institution onboarding
 
-The first production sequence is intentionally controlled. The platform owner signs in through the managed owner session and opens the Super Admin command center. There, create the institution and its first Admin account. Securely transmit the generated institution code, issued username, and temporary password to the institution Admin through an out-of-band channel. That Admin creates Teacher accounts, and each Teacher creates or imports Student accounts.
+The first production sequence is intentionally controlled. The platform owner opens `/super-admin/login` (or selects **Platform owner sign in** on the public home page) and signs in with the dedicated managed owner email and password. The app then opens `/super-admin` and the Super Admin command center. There, create the institution and its first Admin account. Securely transmit the generated institution code, issued username, and temporary password to the institution Admin through an out-of-band channel. That Admin creates Teacher accounts, and each Teacher creates or imports Student accounts.
 
 Before production use, perform a manual acceptance pass using distinct Admin, Teacher, and Student accounts. Confirm credential provisioning, institution-code login, XLSX/CSV selection, import confirmation, assessment assignment, test-code entry, assessment completion, result export, and audit visibility.
 

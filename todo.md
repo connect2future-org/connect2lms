@@ -66,5 +66,9 @@
 - [x] Ensure published assessments are visible to eligible assigned students within the institution scope.
 - [x] Repair Excel roster import header mapping, normalization, and preview/confirm persistence.
 - [x] Verify Teacher role session context and remove the remaining 403 caused by stale or incorrect identity state.
-- [ ] Re-run automated tests, production build, and package a fresh ZIP after the Teacher workflow fixes.
+- [x] Re-run automated tests, production build, and package a fresh ZIP after the Teacher workflow fixes.
 - [ ] Restore Super Admin owner access after institution credential-session mode is cleared or absent, without weakening tenant role boundaries.
+- [x] Replace Super Admin Google/OAuth access with a dedicated email-password owner login and managed credential secret.
+- [x] Add secure Super Admin credential session procedures and prevent institution roles from using the owner login.
+- [x] Ensure direct route entry and internal navigation resolve `/super-admin`, `/admin`, `/teacher`, and `/student` reliably.
+- [ ] Validate dedicated owner login, route navigation, role boundaries, tests, build, and refreshed ZIP delivery.
