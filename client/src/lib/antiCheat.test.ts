@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { createIntegrityReporter } from "./antiCheat";
+import { createIntegrityReporter, integrityWarningMessage } from "./antiCheat";
 
 describe("client anti-cheat event reporting", () => {
   it("deduplicates paired visibility and blur events in the same browser action", () => {
@@ -12,6 +12,11 @@ describe("client anti-cheat event reporting", () => {
     expect(reporter("WINDOW_BLUR")).toBe(true);
     expect(report.mock.calls.map(([event]) => event)).toEqual(["TAB_HIDDEN", "WINDOW_BLUR"]);
     vi.useRealTimers();
+  });
+
+  it("formats an immediate warning for each violation and threshold auto-submit", () => {
+    expect(integrityWarningMessage("TAB_HIDDEN", 2)).toContain("tab hidden");
+    expect(integrityWarningMessage("SHORTCUT", 5, true, 5)).toContain("reached the limit of 5");
   });
 
   it("keeps distinct event types reportable", () => {

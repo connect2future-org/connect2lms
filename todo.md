@@ -83,3 +83,7 @@
 - [x] Add regression coverage for multi-question payloads and published assessment start-window behavior.
 - [x] Explicitly show assigned, access-code-required, upcoming, available, and expired states on each Student assessment card with state-specific messaging.
 - [x] Add regression coverage for Student assessment card state presentation and start-link gating across schedule windows and access-code requirements.
+- [x] Mark assigned assessments as COMPLETED in the Student assessment UI after a submitted or auto-submitted attempt.
+- [x] Show an immediate visible warning for every anti-cheat violation with the current count and threshold outcome.
+- [x] Add regression coverage for completed-card state and per-violation warning behavior.
+- [x] Add a direct regression test for the COMPLETED Student assessment-card presentation and submitted-result join logic.

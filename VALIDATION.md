@@ -91,3 +91,17 @@ The Teacher authoring form now supports repeatable question blocks with add/remo
 New Teacher-created assessments start immediately by default for a 90-minute active window, so a Student who is assigned the published test can open it without waiting through a hidden delay. Existing upcoming or expired records remain correctly closed. Student cards now show explicit `ASSIGNED`, `UPCOMING`, `AVAILABLE`, `EXPIRED`, and `ACCESS CODE REQUIRED` states with state-specific messaging and only render the secure-gateway link when the assessment is active.
 
 The final validation passed with 17 test files, 45 passing assertions, and 3 intentionally skipped live-Atlas assertions, plus TypeScript and production build checks.
+
+## Completed assessment state and violation warnings
+
+The Student dashboard now joins assigned assessments with the student’s own result records by assessment ID. Submitted, auto-submitted, and expired scored attempts are shown on the corresponding assessment card as `COMPLETED`, with explanatory text that the attempt was submitted and scored. The result-history table remains available for detailed score and integrity counts.
+
+During a live attempt, every server-recorded integrity violation now triggers an immediate warning toast naming the event and current violation count. Reaching the configured threshold changes the feedback to an auto-submit warning and transitions the attempt to the recorded result screen. Warning formatting and deduplicated event behavior are covered by client tests; server threshold and policy enforcement remain covered by attempt tests.
+
+The full validation passed with 17 test files, 46 passing assertions, and 3 intentionally skipped live-Atlas assertions, plus TypeScript and production build checks. Manual confirmation with a real Student account and browser actions remains recommended.
+
+## Completed state and per-violation feedback
+
+Student assessment cards now join assigned assessments with result records by assessment ID. A submitted, auto-submitted, or expired scored attempt is displayed as `COMPLETED` with a non-startable `View result history` state. During a live attempt, each accepted anti-cheat event immediately produces a warning naming the event and current count; reaching the configured threshold produces an auto-submit warning and transitions to the recorded result screen.
+
+The final validation passed with 17 test files, 47 passing assertions, and 3 intentionally skipped live-Atlas assertions, plus TypeScript and production build checks. Direct regression coverage now includes the submitted-result join and completed card presentation.

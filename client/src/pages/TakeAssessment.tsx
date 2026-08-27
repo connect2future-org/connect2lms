@@ -5,9 +5,9 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { trpc } from "@/lib/trpc";
-import { createIntegrityReporter, type IntegrityEventType } from "@/lib/antiCheat";
+import { createIntegrityReporter, integrityWarningMessage, type IntegrityEventType } from "@/lib/antiCheat";
 
-type IntegrityPolicy = { requireFullscreen?: boolean; detectTabSwitch?: boolean; detectWindowBlur?: boolean; detectFullscreenExit?: boolean; detectClipboard?: boolean; detectContextMenu?: boolean; detectShortcuts?: boolean };
+type IntegrityPolicy = { requireFullscreen?: boolean; detectTabSwitch?: boolean; detectWindowBlur?: boolean; detectFullscreenExit?: boolean; detectClipboard?: boolean; detectContextMenu?: boolean; detectShortcuts?: boolean; violationThreshold?: number };
 
 function displayTime(ms: number) {
   const seconds = Math.max(0, Math.ceil(ms / 1000));
@@ -27,7 +27,7 @@ export default function TakeAssessment() {
   const assessment = trpc.attempts.questions.useQuery({ attemptId: attemptId ?? 0 }, { enabled: Boolean(attemptId) });
   const autosave = trpc.attempts.saveAnswer.useMutation();
   const submit = trpc.attempts.submit.useMutation();
-  const violation = trpc.attempts.recordViolation.useMutation({ onSuccess: result => { if (result.data.autoSubmitted && result.data.result) setCompleted(result.data.result); } });
+  const violation = trpc.attempts.recordViolation.useMutation();
   const policy = (assessment.data?.antiCheat ?? {}) as IntegrityPolicy;
   const questionCount = assessment.data?.data.length ?? 0;
 
@@ -42,7 +42,7 @@ export default function TakeAssessment() {
 
   useEffect(() => {
     if (!attemptId || !assessment.data || completed) return;
-    const report = createIntegrityReporter((eventType: IntegrityEventType) => violation.mutate({ attemptId, eventType }));
+    const report = createIntegrityReporter((eventType: IntegrityEventType) => violation.mutate({ attemptId, eventType }, { onSuccess: result => { if (result.data.autoSubmitted && result.data.result) { toast.error(integrityWarningMessage(eventType, result.data.violationCount, true, policy.violationThreshold ?? 5)); setCompleted(result.data.result); } else { toast.warning(integrityWarningMessage(eventType, result.data.violationCount)); } }, onError: error => toast.error(error instanceof Error ? error.message : "Integrity event could not be recorded.") }));
     const onVisibility = () => { if (document.hidden && policy.detectTabSwitch) report("TAB_HIDDEN"); };
     const onBlur = () => { if (policy.detectWindowBlur) report("WINDOW_BLUR"); };
     const onFullscreen = () => { if (policy.detectFullscreenExit && !document.fullscreenElement) report("FULLSCREEN_EXIT"); };

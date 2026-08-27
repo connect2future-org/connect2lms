@@ -2,6 +2,11 @@ export type IntegrityEventType = "TAB_HIDDEN" | "WINDOW_BLUR" | "FULLSCREEN_EXIT
 
 const FOCUS_LOSS_EVENTS = new Set<IntegrityEventType>(["TAB_HIDDEN", "WINDOW_BLUR"]);
 
+export function integrityWarningMessage(eventType: IntegrityEventType, count: number, autoSubmitted = false, threshold?: number) {
+  const label = eventType.replaceAll("_", " ").toLowerCase();
+  return autoSubmitted && threshold ? `Integrity violation: ${label}. Violation ${count} reached the limit of ${threshold}; this attempt was auto-submitted.` : `Integrity warning: ${label}. Violation ${count} recorded.`;
+}
+
 export function createIntegrityReporter(report: (eventType: IntegrityEventType) => void, dedupeWindowMs = 900) {
   let lastEvent: { type: IntegrityEventType; at: number } | null = null;
   return (eventType: IntegrityEventType) => {
