@@ -16,6 +16,7 @@ describe("client anti-cheat event reporting", () => {
 
   it("formats an immediate warning for each violation and threshold auto-submit", () => {
     expect(integrityWarningMessage("TAB_HIDDEN", 2)).toContain("tab hidden");
+    expect(integrityWarningMessage("TAB_HIDDEN", 2)).toContain("Violation 2 recorded.");
     expect(integrityWarningMessage("SHORTCUT", 5, true, 5)).toContain("reached the limit of 5");
   });
 
@@ -27,4 +28,5 @@ describe("client anti-cheat event reporting", () => {
     expect(reporter("SHORTCUT")).toBe(true);
     expect(report).toHaveBeenCalledTimes(3);
   });
+
 });

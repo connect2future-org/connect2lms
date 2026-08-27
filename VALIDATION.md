@@ -123,3 +123,15 @@ The Teacher workspace uses an `items-start` two-column grid and an independently
 `server/lms/removalRouter.test.ts` now covers eight route-level cases: successful teacher, student, assessment, and institution removal behavior; teacher, student, and assessment scope rejection; and institution not-found rejection. `server/lms/assessmentActions.test.ts` covers draft-only editability and delete-versus-archive policy.
 
 Final validation passed `pnpm check`, `pnpm test` with 19 test files and 57 passing assertions plus 3 intentionally skipped live-Atlas assertions, and `pnpm build`.
+
+## Anti-cheat warning visibility repair
+
+The Student assessment route now renders a persistent, accessible warning banner after every server-accepted integrity event. The banner is placed directly above the question set and reports the event type, current violation count, configured threshold, and whether the attempt was auto-submitted. The auto-submission result view retains the same warning context instead of relying only on a transient toast. Toast notifications remain enabled as an immediate secondary signal.
+
+During investigation, the managed preview network log showed successful `attempts.recordViolation` responses with HTTP 200 and the expected `violationCount`, `autoSubmitted`, and `result` fields. The missing user-visible signal was therefore addressed in the client presentation layer. The anti-cheat helper regression suite remains green, and the full validation run passed with 19 test files, 57 passing assertions, 3 intentionally skipped live-Atlas assertions, TypeScript checks, and a production build. A connected Student retest is still required to verify the visible banner and threshold auto-submit in the user’s browser event environment.
+
+## Focused anti-cheat warning-banner regression
+
+A dedicated `client/src/pages/TakeAssessment.test.ts` regression now server-renders the warning banner for both a normal recorded violation and a threshold auto-submit. It verifies the assertive accessibility attributes, event label, human-readable warning, and count/threshold indicator, including the retained auto-submit message.
+
+The corrected final validation passed `pnpm vitest run client/src/pages/TakeAssessment.test.ts`, `pnpm check`, `pnpm test`, and `pnpm build`: 20 test files, 59 passing assertions, 3 intentionally skipped live-Atlas assertions, and a successful production bundle. A connected Student retest remains necessary to observe the banner after a real browser event and to confirm the complete threshold flow in the user’s session.
