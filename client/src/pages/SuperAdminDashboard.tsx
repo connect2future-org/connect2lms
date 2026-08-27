@@ -12,12 +12,14 @@ const normalizeUsername = (value: string) => value.trim().toLowerCase().replace(
 
 export default function SuperAdminDashboard() {
   const utils = trpc.useUtils();
+  const auth = trpc.auth.me.useQuery();
   const [search, setSearch] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(blankForm);
   const [issued, setIssued] = useState<{ institution: string; code: string; adminUsername: string } | null>(null);
-  const dashboard = trpc.platform.dashboard.useQuery();
-  const schools = trpc.platform.schools.list.useQuery(search ? { search } : undefined);
+  const ownerReady = auth.data?.role === "SUPER_ADMIN";
+  const dashboard = trpc.platform.dashboard.useQuery(undefined, { enabled: ownerReady });
+  const schools = trpc.platform.schools.list.useQuery(search ? { search } : undefined, { enabled: ownerReady });
   const passwordValid = form.temporaryPassword.length >= 12;
   const usernameValid = /^[a-zA-Z0-9._-]{3,80}$/.test(form.adminUsername);
   const create = trpc.platform.schools.create.useMutation({

@@ -71,4 +71,6 @@
 - [x] Replace Super Admin Google/OAuth access with a dedicated email-password owner login and managed credential secret.
 - [x] Add secure Super Admin credential session procedures and prevent institution roles from using the owner login.
 - [x] Ensure direct route entry and internal navigation resolve `/super-admin`, `/admin`, `/teacher`, and `/student` reliably.
-- [ ] Validate dedicated owner login, route navigation, role boundaries, tests, build, and refreshed ZIP delivery.
+- [x] Validate dedicated owner login, route navigation, role boundaries, tests, build, and refreshed ZIP delivery.
+- [x] Align dedicated Super Admin password validation with the configured owner secret length while retaining a minimum secure threshold.
+- [x] Gate Super Admin dashboard queries until the resolved session is confirmed to be `SUPER_ADMIN`, preventing premature 403 requests.

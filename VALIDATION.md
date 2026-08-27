@@ -49,3 +49,13 @@ The latest validation passed `pnpm check`, `pnpm test` with 13 test files and 31
 Super Admin access now uses the managed `SUPER_ADMIN_EMAIL` and `SUPER_ADMIN_PASSWORD` secrets through `/super-admin/login`; the Google/OAuth owner fallback is no longer used by the application request context. A successful owner login issues the same signed application session format, but only with the `SUPER_ADMIN` role. Institution credentials cannot call the owner procedure. Direct navigation to `/super-admin/login`, `/super-admin`, `/admin`, `/teacher`, and `/student` is registered in the client router, and the public home page includes a dedicated **Platform owner sign in** entry point.
 
 The dedicated owner secret health check, owner-login session round trip, role-context checks, all regular tests (14 files, 33 assertions), TypeScript check, and production build passed. Actual owner credential submission in the browser remains a manual acceptance action because it requires the private managed secret.
+
+## Owner password compatibility correction
+
+The dedicated owner form and `auth.ownerLogin` procedure now accept the configured nine-character owner secret while retaining an eight-character minimum. The Super Admin dashboard separately gates its registry and metrics queries until `auth.me` confirms `SUPER_ADMIN`, preventing transient 403 requests while a session is loading or belongs to an institution role. The full validation run passed with 14 test files, 33 assertions, TypeScript checks, and a production build.
+
+## Final owner-login blocker resolution
+
+The reported nine-character owner password is now accepted by both the browser form and server procedure with an eight-character minimum. The Super Admin registry metrics, institution list, and audit trail queries are disabled until the current identity is confirmed as `SUPER_ADMIN`, removing premature role-permission requests during authentication resolution. A dedicated regression now also verifies that institution credentials are rejected by `auth.ownerLogin`.
+
+Final automated validation passed: `pnpm check`; `pnpm test` with 14 test files, 34 passing assertions, and 3 intentionally skipped live-Atlas assertions; and `pnpm build`. Direct route rendering was verified for the owner login and protected workspace paths. Manual owner credential submission remains the final acceptance step because the private password is not available to the browser verification process.
