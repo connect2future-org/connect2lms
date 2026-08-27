@@ -1,8 +1,9 @@
 import { ChevronLeft, GraduationCap } from "lucide-react";
 import { Link } from "wouter";
 import { StudentImportPanel } from "@/components/StudentImportPanel";
+import { BlueprintShell } from "@/components/BlueprintShell";
 
-export default function TeacherImport() {
+function TeacherImportContent() {
   return (
     <main className="blueprint-surface min-h-screen p-4 sm:p-8">
       <div className="mx-auto max-w-6xl">
@@ -14,4 +15,8 @@ export default function TeacherImport() {
       </div>
     </main>
   );
+}
+
+export default function TeacherImport() {
+  return <BlueprintShell role="TEACHER"><TeacherImportContent /></BlueprintShell>;
 }

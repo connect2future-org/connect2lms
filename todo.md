@@ -93,3 +93,8 @@
 - [x] Add regression coverage for draft edit restrictions, scoped deletion, and responsive question-editor behavior.
 - [x] Add route-level regression tests for assessment removal, teacher deletion, student deletion, and institution archival, including scope rejection and side-effect assertions.
 - [x] Add a verifiable UI regression or documented manual validation step for the Teacher question-editor independent-scroll layout under many questions.
+- [ ] Perform a clean-scratch manual QA pass across public, owner, institution, assessment, import, anti-cheat, results, and destructive-action workflows; record and fix reproducible edge cases.
+- [ ] Perform and document a real scratch manual pass for authenticated Admin, Teacher, and Student workflows, including login, dashboard navigation, and protected follow-up pages.
+- [ ] Manually verify assessment lifecycle end to end: Teacher create/edit/publish, Student open/start/submit, completed state/result history, and schedule/access-code behavior.
+- [ ] Manually verify roster import with a real XLS/XLSX file through preview and confirm, plus destructive actions for institutions, teachers, students, and assessments.
+- [ ] Manually trigger anti-cheat browser events during a real Student attempt and record warnings, counts, and threshold auto-submit; then update QA documentation and rerun validation.
