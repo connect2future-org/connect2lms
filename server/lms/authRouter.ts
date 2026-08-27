@@ -3,7 +3,7 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { collections } from "../mongo";
 import { publicUser, getCredentialUser, getDb } from "../db";
-import { createLmsSession, LMS_SESSION_COOKIE, lmsSessionCookieOptions } from "./auth";
+import { createLmsSession, LMS_SESSION_COOKIE } from "./auth";
 import { getSessionCookieOptions } from "../_core/cookies";
 import { publicProcedure, router } from "../_core/trpc";
 import { writeAudit, requestAuditContext } from "./utils";

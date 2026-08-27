@@ -6,8 +6,22 @@ const MAX_BYTES = 10 * 1024 * 1024;
 
 function toStringRows(rows: Array<Record<string, unknown>>) {
   return rows
-    .map(row => Object.fromEntries(Object.entries(row).map(([key, value]) => [key.trim(), String(value ?? "").trim()])))
+    .map(row => Object.fromEntries(Object.entries(row).map(([key, value]) => [String(key).trim(), String(value ?? "").trim()])))
     .filter(row => Object.values(row).some(Boolean));
+}
+
+function canonicalHeader(value: unknown) {
+  return String(value ?? "").toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+function worksheetRows(sheet: XLSX.WorkSheet) {
+  const matrix = XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1, defval: "", raw: false });
+  const knownHeaders = new Set(["name", "studentname", "fullname", "studentfullname", "displayname", "firstname", "lastname", "givenname", "surname", "familyname", "email", "emailaddress", "emailid", "mail", "username", "user", "login", "userid", "studentid", "studentnumber", "rollnumber", "rollno", "registrationnumber", "regno", "usn", "branch", "department", "course", "program", "semester", "sem", "section", "sec", "class", "classname", "classsection", "grade"]);
+  const headerIndex = matrix.findIndex(row => row.filter(Boolean).map(canonicalHeader).some(header => knownHeaders.has(header)));
+  if (headerIndex < 0) return [];
+  const headerRow = matrix[headerIndex] ?? [];
+  const headers = headerRow.map((value, index) => String(value || `Column ${index + 1}`).trim());
+  return matrix.slice(headerIndex + 1).map(row => Object.fromEntries(headers.map((header, index) => [header, row[index] ?? ""]))).filter(row => Object.values(row).some(Boolean));
 }
 
 export async function parseStudentImportFile(file: File): Promise<Array<Record<string, string>>> {
@@ -23,5 +37,5 @@ export async function parseStudentImportFile(file: File): Promise<Array<Record<s
   const workbook = XLSX.read(await file.arrayBuffer(), { type: "array" });
   const firstSheet = workbook.SheetNames[0];
   if (!firstSheet) throw new Error("The workbook has no worksheet to import.");
-  return toStringRows(XLSX.utils.sheet_to_json<Record<string, unknown>>(workbook.Sheets[firstSheet], { defval: "" }));
+  return toStringRows(worksheetRows(workbook.Sheets[firstSheet]!));
 }

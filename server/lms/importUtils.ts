@@ -16,15 +16,15 @@ export type ImportRow = {
 };
 
 const aliases: Record<keyof Omit<ImportRow, "rowNumber" | "errors" | "valid">, string[]> = {
-  name: ["name", "studentname", "fullname"],
-  email: ["email", "emailaddress"],
-  username: ["username", "user"],
-  studentId: ["studentid", "rollnumber", "rollno"],
+  name: ["name", "studentname", "fullname", "studentfullname", "displayname"],
+  email: ["email", "emailaddress", "emailid", "mail"],
+  username: ["username", "user", "login", "userid"],
+  studentId: ["studentid", "studentnumber", "rollnumber", "rollno", "registrationnumber", "regno"],
   usn: ["usn"],
-  branch: ["branch", "department"],
+  branch: ["branch", "department", "course", "program"],
   semester: ["semester", "sem"],
   section: ["section", "sec"],
-  className: ["class", "classname", "classname"],
+  className: ["class", "classname", "classsection", "grade"],
 };
 
 function canonicalHeader(key: string) {
@@ -46,6 +46,7 @@ export function normalizeImportRows(rows: Array<Record<string, string>>) {
   const seenUsernames = new Set<string>();
   return rows.slice(0, 1000).map((source, index): ImportRow => {
     const base = Object.fromEntries(Object.entries(aliases).map(([field, names]) => [field, readAlias(source, names)])) as Omit<ImportRow, "rowNumber" | "errors" | "valid">;
+    if (!base.name) base.name = [readAlias(source, ["firstname", "givenname"]), readAlias(source, ["lastname", "surname", "familyname"])].filter(Boolean).join(" ");
     base.email = base.email.toLowerCase();
     base.username = base.username || generatedUsername(base.email, base.studentId || base.usn);
     const errors: string[] = [];

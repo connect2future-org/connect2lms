@@ -7,7 +7,7 @@ The final local validation completed with the following commands.
 | Command | Result |
 |---|---|
 | `pnpm check` | Passed with TypeScript compilation checks. |
-| `pnpm test` | Passed: 9 test files and 25 assertions, with 3 live-Atlas integration assertions intentionally skipped in the regular unit run. |
+| `pnpm test` | Passed: 13 test files and 31 assertions, with 3 live-Atlas integration assertions intentionally skipped in the regular unit run. |
 | `RUN_MONGO_INTEGRATION=true pnpm vitest run server/mongo.constraints.integration.test.ts` | Passed: live Atlas verification of institution-scoped credential uniqueness and partial active-attempt uniqueness, with temporary test collections cleaned up afterward. |
 | `pnpm build` | Passed: React client and Node server bundles were produced. |
 
@@ -16,8 +16,8 @@ The final local validation completed with the following commands.
 | Workflow | Coverage |
 |---|---|
 | Role and tenant boundaries | Shared authorization guard tests and route-level people-management success/rejection cases. |
-| Student import | Column normalization, formula neutralization, and duplicate-detection tests. |
-| Assessment administration | Publish validation, draft update, archive, unpublish, and access-code enable/disable/revoke/regenerate cases. |
+| Student import | Client Excel title-row/header detection, common alias parsing, column normalization, formula neutralization, and duplicate-detection tests. |
+| Assessment administration | Concise MCQ prompt validation, four-option Teacher authoring, publish validation, automatic active-student assignment, draft update, archive, unpublish, and access-code enable/disable/revoke/regenerate cases. |
 | Assessment outcomes | Positive/negative marking, server expiry calculation, and score calculation tests. |
 | Attempt safety | Assignment eligibility, access-code validation, duplicate active-attempt rejection, expiry closure, and persisted scoring. |
 | Integrity enforcement | Threshold policy and the `recordViolation` mutation's threshold-triggered auto-submit path. |
@@ -31,3 +31,9 @@ Direct browser navigation to the protected Super Admin route without a session p
 ## Remaining acceptance step
 
 The managed workspace contained an authenticated Super Admin owner session for visual inspection. A production administrator should still perform a manual acceptance pass with separately provisioned Admin, Teacher, and Student accounts. This verifies real account switching, file selection, import confirmation, assignment delivery, assessment completion, result export, and audit visibility with production policy settings.
+
+## Teacher workflow repair validation
+
+The Teacher authoring flow now accepts concise non-empty question text, renders and submits four required MCQ options, and allows A–D as the correct answer. Publishing automatically creates institution- and teacher-scoped assignments for active students already managed by that Teacher; the existing explicit assignment action remains available for students added later. Excel parsing now detects the actual header row, preserves typed cell values as strings, and supports common roster aliases including email ID, registration number, department, and separate first/last-name columns.
+
+The latest automated run passed `pnpm check`, all regular tests (12 files, 30 assertions), and `pnpm build`. The credential-session context tests also confirm that a Teacher/Admin/Student session is preferred over a Super Admin fallback and that a missing credential session does not silently authorize the owner. The live browser acceptance step remains: refresh the preview, sign in with an issued Teacher account, create/publish a test, and confirm it appears in the assigned Student account; upload an Excel roster and confirm its preview rows before confirmation.

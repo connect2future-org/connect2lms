@@ -24,3 +24,8 @@ describe("student import normalization", () => {
     expect(summarizeImportRows(rows)).toMatchObject({ total: 1, invalid: 1, duplicates: 1 });
   });
 });
+
+  it("combines first and last name columns and accepts common roster aliases", () => {
+    const rows = normalizeImportRows([{ "First Name": "Asha", Surname: "Rao", "Email ID": "asha@example.edu", "Registration Number": "REG-22", Department: "ECE" }]);
+    expect(rows[0]).toMatchObject({ name: "Asha Rao", email: "asha@example.edu", studentId: "REG-22", branch: "ECE", username: "reg-22", valid: true });
+  });

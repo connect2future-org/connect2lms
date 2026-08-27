@@ -62,8 +62,8 @@
 - [x] Add an authenticated `auth.login` procedure test that verifies a pre-provisioned account receives a valid credential session and that the session resolves through the server context.
 - [ ] Verify a real institution login and authenticated follow-up page access after the managed-secret compatibility fix.
 - [ ] Ensure a valid institution credential session takes precedence over any existing Super Admin browser session.
-- [ ] Fix Teacher MCQ authoring validation so short legitimate content is accepted and four answer options are supported.
-- [ ] Ensure published assessments are visible to eligible assigned students within the institution scope.
-- [ ] Repair Excel roster import header mapping, normalization, and preview/confirm persistence.
-- [ ] Verify Teacher role session context and remove the remaining 403 caused by stale or incorrect identity state.
+- [x] Fix Teacher MCQ authoring validation so short legitimate content is accepted and four answer options are supported.
+- [x] Ensure published assessments are visible to eligible assigned students within the institution scope.
+- [x] Repair Excel roster import header mapping, normalization, and preview/confirm persistence.
+- [x] Verify Teacher role session context and remove the remaining 403 caused by stale or incorrect identity state.
 - [ ] Re-run automated tests, production build, and package a fresh ZIP after the Teacher workflow fixes.
