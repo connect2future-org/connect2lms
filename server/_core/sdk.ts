@@ -4,7 +4,7 @@ import axios, { type AxiosInstance } from "axios";
 import { parse as parseCookieHeader } from "cookie";
 import type { Request } from "express";
 import { SignJWT, jwtVerify } from "jose";
-import type { User } from "../../drizzle/schema";
+import type { LmsUser as User } from "../lms/types";
 import * as db from "../db";
 import { ENV } from "./env";
 import type {
@@ -311,10 +311,7 @@ class SDKServer {
       throw ForbiddenError("User not found");
     }
 
-    await db.upsertUser({
-      openId: user.openId,
-      lastSignedIn: signedInAt,
-    });
+    if (user.openId) await db.upsertUser({ openId: user.openId, lastSignedIn: signedInAt });
 
     return user;
   }

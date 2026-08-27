@@ -11,12 +11,16 @@ import StudentDashboard from "./pages/StudentDashboard";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import TeacherDashboard from "./pages/TeacherDashboard";
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
   return (
     <Switch>
       <Route path={"/"} component={Home} />
+      <Route path={"/login"} component={Login} />
+      <Route path={"/signup"} component={Signup} />
       <Route path={"/teacher/import"} component={TeacherImport} />
       <Route path={"/student/assessment/:assessmentId"} component={TakeAssessment} />
       <Route path={"/student"} component={StudentDashboard} />

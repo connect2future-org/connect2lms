@@ -60,4 +60,8 @@ export function normalizeImportRows(rows: Array<Record<string, string>>) {
   });
 }
 
+export function summarizeImportRows(rows: ImportRow[]) {
+  return { total: rows.length, valid: rows.filter(row => row.valid).length, invalid: rows.filter(row => !row.valid).length, existing: rows.filter(row => row.errors.some(error => error.startsWith("Existing student"))).length, duplicates: rows.filter(row => row.errors.some(error => error.includes("Duplicate") || error.includes("elsewhere in this institution"))).length, new: rows.filter(row => row.valid && !row.errors.length).length };
+}
+
 export const columnMapping = Object.fromEntries(Object.entries(aliases).map(([field, names]) => [field, names]));

@@ -1,9 +1,9 @@
 import { TRPCError } from "@trpc/server";
-import type { LmsRole, User } from "../../drizzle/schema";
+import type { LmsRole, LmsUser } from "./types";
 
-export type AuthenticatedActor = User;
+export type AuthenticatedActor = LmsUser;
 
-export function requireRole(actor: User | null, allowed: readonly LmsRole[]): AuthenticatedActor {
+export function requireRole(actor: LmsUser | null, allowed: readonly LmsRole[]): AuthenticatedActor {
   if (!actor) throw new TRPCError({ code: "UNAUTHORIZED", message: "Authentication is required." });
   if (!allowed.includes(actor.role)) {
     throw new TRPCError({ code: "FORBIDDEN", message: "Your role is not permitted to perform this operation." });

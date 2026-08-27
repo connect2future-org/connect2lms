@@ -33,3 +33,24 @@
 - [x] Add explicit lifecycle test coverage for returning a published assessment to draft.
 - [x] Add working client-side search filters to the Admin faculty table, Teacher student/assessment/result tables, and Student assessment/result tables.
 - [x] Verify available authenticated runtime routes, dashboard/reporting/audit presentation, and server-side cross-role workflow coverage; direct browser verification confirmed anonymous protected-route rejection, and the documented deployment handover calls for institution-run multi-account acceptance testing.
+- [x] Define the sellable institution onboarding model, including Super Admin-issued institution codes and Admin access credentials.
+- [x] Add dedicated Student, Teacher, and institution Admin sign-up/login entry points while retaining Super Admin as owner-only access.
+- [x] Design and implement a MongoDB Atlas-compatible persistence layer and migration plan for tenant, account, assessment, attempt, integrity, and audit data.
+- [x] Update Admin, Teacher, and Student workflows to use institution code, login identity, and role-specific admission rules.
+- [x] Add a MongoDB Atlas connection secret, configuration validation, and a reusable connection manager.
+- [x] Replace Drizzle SQL entities and queries with MongoDB collections, indexes, atomic updates, and tenant-safe repository methods.
+- [x] Preserve the one-active-attempt invariant and unique institution/login identifiers through MongoDB compound unique indexes.
+- [x] Implement institution Admin credential issuance by the Super Admin, using institution name, unique institution code, username, and password.
+- [x] Implement a unified pre-provisioned login screen where users select Admin, Teacher, or Student and provide only their issued credentials.
+- [x] Remove public self-registration and keep Super Admin access isolated from institution-facing account flows.
+- [x] Safely migrate any existing MongoDB unique username/email/openId indexes to partial indexes so owner-only null fields do not collide.
+- [x] Introduce a tenant-safe MongoDB repository layer for commercial identity and institution lookups, and route authentication through it.
+- [x] Replace global/single-field login and active-attempt uniqueness with explicit compound unique indexes that match the commercial multi-tenant model (for example institution-scoped login identifiers and an attempt uniqueness strategy tied to assessment/student state), and add tests for those constraints.
+- [x] Replace the single active-attempt-key index with an explicit compound attempt index strategy and document its state-transition guarantee.
+- [x] Scope account-creation duplicate checks to the institution so credential identities can safely repeat across separate schools.
+- [x] Upgrade nullable USN and assessment access-code indexes to partial MongoDB indexes, preventing null-value collisions across records.
+- [x] Add real automated tests proving institution-scoped username/email uniqueness permits reuse across schools and rejects duplicates within one school.
+- [x] Document and test the partial compound active-attempt constraint to prove one student can hold only one in-progress attempt per assessment while submitted attempts remain historical.
+- [x] Add isolated live-MongoDB integration tests that exercise actual compound unique-index rejection and state-transition behavior, with cleanup after each test run.
+- [x] Align the institution-scoped import duplicate summary with the revised duplicate-detection wording and add a regression test.
+- [x] Package the revised MongoDB Atlas commercial LMS source, tests, and documentation as a fresh ZIP file.

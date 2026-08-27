@@ -1,6 +1,6 @@
 import { TRPCError } from "@trpc/server";
 import { describe, expect, it } from "vitest";
-import type { User } from "../../drizzle/schema";
+import type { LmsUser as User } from "./types";
 import { requireRole, requireSameSchool, requireTeacherOwnership } from "./guards";
 
 const teacher: User = {

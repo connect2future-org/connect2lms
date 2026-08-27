@@ -2,7 +2,9 @@
 
 ## Design intent
 
-The application is a **multi-tenant assessment platform** built as a React client and an Express-compatible, typed server API. Tenant isolation is deliberate: every school-owned record carries a `schoolId`, and every privileged operation derives its scope from the authenticated actor rather than from client supplied identifiers.
+The application is a **commercial multi-tenant assessment platform** built as a React client, an Express-compatible typed server API, and MongoDB Atlas collections. Tenant isolation is deliberate: every school-owned record carries a `schoolId`, and every privileged operation derives its scope from the authenticated actor rather than from client supplied identifiers.
+
+The platform owner is the only `SUPER_ADMIN`. The owner provisions each institution with a generated institution code and a pre-created Admin account. Institution Admins create Teachers, and Teachers create or import Students. The public entry point has no self-registration path.
 
 ## Domain model
 
@@ -17,6 +19,16 @@ The application is a **multi-tenant assessment platform** built as a React clien
 | `integrityViolation` | Immutable browser integrity events. | Valid only for the active, authenticated student attempt. |
 | `importBatch` | Two-stage student import preview and confirmation record. | Belongs to a teacher; preview data remains pending until explicit confirmation. |
 | `auditLog` | Security-relevant business event record. | Stores actor, tenant scope, target metadata, and safe request context without secrets. |
+
+## MongoDB persistence guarantees
+
+| Data boundary | Atlas collection constraint |
+|---|---|
+| Institution identity | `schools.code` is globally unique. |
+| Issued credentials | `{ schoolId, username }` and `{ schoolId, email }` are partial compound unique indexes. The same identifier can therefore exist at a different institution but not twice in one institution. |
+| Student identifiers | `{ schoolId, usn }` and `{ schoolId, studentId }` are partial compound unique indexes. |
+| Assessment access codes | `{ schoolId, accessCode }` is a partial compound unique index. |
+| Active assessment attempt | `{ assessmentId, studentId, status }` is unique only where `status = IN_PROGRESS`, retaining submitted/expired historical attempts. |
 
 ## Authorization matrix
 
@@ -35,13 +47,18 @@ Every restricted procedure follows the same sequence: authenticate the user, ver
 
 ## Assessment state flow
 
-`DRAFT → PUBLISHED → ACTIVE → COMPLETED → ARCHIVED`
+`DRAFT → PUBLISHED → ARCHIVED`
 
-An attempt can be created only after the student is authenticated, active, assigned, within the assessment window, below the maximum attempts, and has provided a valid code if code entry is required. Its expiry is calculated server-side as the earlier of the assessment end time and `startedAt + durationMinutes`.
+An assessment is available only when its published schedule opens. An attempt can be created only after the student is authenticated, active, assigned, within the assessment window, below the maximum attempts, and has provided a valid code if code entry is required. Its expiry is calculated server-side as the earlier of the assessment end time and `startedAt + durationMinutes`.
+
+## Attempt state flow
+
+`IN_PROGRESS → SUBMITTED | EXPIRED | AUTO_SUBMITTED`
+
+The partial active-attempt index permits the first state only once per student-assessment pair. A server-scored closing transition changes the status and removes the document from that partial unique index; a later eligible attempt is then permitted only if the maximum-attempt policy allows it.
 
 ## Import state flow
 
 `UPLOADED → PREVIEWED → CONFIRMED` or `REJECTED`
 
 The preview phase normalizes accepted CSV/XLSX columns and applies validation, duplicate detection, and CSV-injection safeguards without mutating student records. The confirmation phase revalidates the batch and uses tenant/teacher identity from the authenticated server context.
-

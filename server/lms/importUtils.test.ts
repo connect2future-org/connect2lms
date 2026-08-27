@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { normalizeImportRows } from "./importUtils";
+import { normalizeImportRows, summarizeImportRows } from "./importUtils";
 
 describe("student import normalization", () => {
   it("maps aliases and recognizes valid student records", () => {
@@ -16,5 +16,11 @@ describe("student import normalization", () => {
   it("neutralizes formula-like spreadsheet values instead of preserving executable prefixes", () => {
     const rows = normalizeImportRows([{ Name: "=HYPERLINK(\"https://malicious.example\")", Email: "mira@example.edu", Username: "mira" }]);
     expect(rows[0]?.name.startsWith("'=HYPERLINK")).toBe(true);
+  });
+
+  it("counts institution-scoped duplicate identity conflicts in the preview summary", () => {
+    const rows = normalizeImportRows([{ Name: "Mira Patel", Email: "mira@example.edu", Username: "mira" }]);
+    rows[0]!.errors.push("Identity already exists elsewhere in this institution."); rows[0]!.valid = false;
+    expect(summarizeImportRows(rows)).toMatchObject({ total: 1, invalid: 1, duplicates: 1 });
   });
 });

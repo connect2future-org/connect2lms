@@ -2,7 +2,7 @@ import { jwtVerify, SignJWT } from "jose";
 import { parse } from "cookie";
 import type { Request } from "express";
 import { getUserById } from "../db";
-import type { User } from "../../drizzle/schema";
+import type { LmsUser } from "./types";
 
 export const LMS_SESSION_COOKIE = "lms_session";
 
@@ -12,7 +12,7 @@ function tokenSecret() {
   return new TextEncoder().encode(value);
 }
 
-export async function createLmsSession(user: User) {
+export async function createLmsSession(user: LmsUser) {
   return new SignJWT({ role: user.role, schoolId: user.schoolId ?? null })
     .setProtectedHeader({ alg: "HS256" })
     .setSubject(String(user.id))
@@ -21,7 +21,7 @@ export async function createLmsSession(user: User) {
     .sign(tokenSecret());
 }
 
-export async function getLmsSessionUser(req: Request): Promise<User | null> {
+export async function getLmsSessionUser(req: Request): Promise<LmsUser | null> {
   const cookies = parse(req.headers.cookie ?? "");
   const token = cookies[LMS_SESSION_COOKIE];
   if (!token) return null;

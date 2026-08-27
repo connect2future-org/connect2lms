@@ -1,55 +1,38 @@
-# LMS API Contracts
+# API Contracts
 
-The application exposes typed, Express-hosted API procedures under `/api/trpc`. All mutations return a consistent envelope with `success`, `message`, and `data`. Restricted procedures infer `actorId`, `role`, `schoolId`, and relationship scope from the authenticated session; these fields are not accepted from clients.
+The application exposes typed Express-hosted procedures under `/api/trpc`. MongoDB Atlas stores tenant-bound records; the server derives the actor, role, institution scope, and ownership from the session rather than accepting these values from the browser.
 
-## Access and administration
+## Authentication and commercial onboarding
 
-| Procedure | Access | Required input | Result | Notable errors |
+| Procedure | Access | Required input | Result | Key rule |
 |---|---|---|---|---|
-| `platform.bootstrap` | Platform owner on first use | None | Creates or upgrades the owner as `SUPER_ADMIN`. | `FORBIDDEN` |
-| `schools.create` | `SUPER_ADMIN` | Institution name, type, contact, initial admin identity | School and admin provisioning summary. | `DUPLICATE_SCHOOL_CODE`, `DUPLICATE_EMAIL` |
-| `schools.list` | `SUPER_ADMIN` | Optional status, search, page | Paginated schools with server-calculated counts. | `FORBIDDEN` |
-| `schools.updateStatus` | `SUPER_ADMIN` | Scoped school ID, new status | Updated school. | `SCHOOL_NOT_FOUND`, `INVALID_STATE` |
-| `people.createTeacher` | `ADMIN` | Name, email, username, temporary password | Teacher identity under caller's school. | `DUPLICATE_IDENTITY`, `FORBIDDEN` |
-| `people.listTeachers` | `ADMIN` | Optional search and status | Teachers within caller's school only. | `FORBIDDEN` |
-| `students.create` | `TEACHER` | Student identity and academic profile | Student tied to caller's school and teacher. | `DUPLICATE_IDENTITY`, `FORBIDDEN` |
-| `students.listMine` | `TEACHER` | Optional search, status, page | Caller-owned student records. | `FORBIDDEN` |
+| `auth.login` | Public, provisioned users only | `role`, `institutionCode`, `identifier`, `password` | Signed session and public user profile | Only `ADMIN`, `TEACHER`, and `STUDENT` are accepted. No account is created. |
+| `auth.me` | Public | None | Current session profile or `null` | The Super Admin is owner-authenticated, not a public credential login. |
+| `auth.logout` | Public | None | Success acknowledgement | Clears only the signed application session. |
+| `platform.schools.create` | `SUPER_ADMIN` | Institution profile and initial Admin identity | New institution, generated code, and public Admin profile | The temporary password is hashed and never returned. |
+| `platform.schools.setStatus` | `SUPER_ADMIN` | `schoolId`, status | Updated status | Institution state is enforced at the credential lookup boundary. |
 
-## Student import
+## Institution people and roster management
 
-| Procedure | Access | Required input | Result | Safety behavior |
+| Procedure | Access | Required input | Result | Scope guarantee |
 |---|---|---|---|---|
-| `imports.preview` | `TEACHER` | File payload parsed by the client into rows and detected columns | Batch ID, column mapping, row validity summary, and row-level errors. | Does not write users; rejects unrecognized/missing required fields and CSV-formula prefixes. |
-| `imports.confirm` | `TEACHER` | Pending batch ID | Created, updated, duplicate, and invalid counters. | Rechecks batch ownership and validity; applies school/teacher ownership server-side. |
+| `people.admin.createTeacher` | `ADMIN` | Teacher profile and temporary password | Public Teacher profile | The Teacher belongs to the caller's institution. |
+| `people.teacher.createStudent` | `TEACHER` | Student identity, academic profile, temporary password | Public Student profile | The Student belongs to the caller's institution and teacher. |
+| `imports.preview` | `TEACHER` | Parsed CSV/XLSX rows and source name | Batch ID, column mapping, validity summary, row errors | Preview makes no student-record change. |
+| `imports.confirm` | `TEACHER` | `batchId`, default temporary password | Created, updated, duplicate, invalid counters | Batch ownership and student scope are rechecked on the server. |
 
-## Assessment lifecycle
+## Assessment, assignment, and results
 
-| Procedure | Access | Required input | Result | Notable errors |
+| Procedure | Access | Required input | Result | Key rule |
 |---|---|---|---|---|
-| `assessments.create` | `TEACHER` | Title, window, duration, attempts, policy, validated MCQ questions | Draft assessment. | `INVALID_QUESTION`, `INVALID_SCHEDULE` |
-| `assessments.update` | Owning `TEACHER` | Assessment ID and allowed edits | Updated draft assessment. | `FORBIDDEN`, `ASSESSMENT_NOT_EDITABLE` |
-| `assessments.publish` | Owning `TEACHER` | Assessment ID | Published assessment and generated code where enabled. | `INVALID_QUESTION`, `INVALID_SCHEDULE` |
-| `assignments.create` | Owning `TEACHER` | Assessment ID and student IDs | Assignment summary. | `STUDENT_NOT_OWNED`, `DUPLICATE_ASSIGNMENT` |
-| `assessments.studentList` | `STUDENT` | Optional status | Student-safe assessment metadata and derived availability. | `FORBIDDEN` |
+| `assessments.create` | `TEACHER` | Schedule, policy, and validated MCQ list | Draft assessment | Test code is generated or validated when code access is enabled. |
+| `assessments.publish` / `setLifecycle` | Owning `TEACHER` | Assessment ID and action | Lifecycle state | An assessment must contain question content before publication. |
+| `assessments.assign` | Owning `TEACHER` | Assessment ID and student IDs | Created and existing assignment counters | Each Student must be active and teacher-owned. |
+| `attempts.start` | Assigned `STUDENT` | Assessment ID and test code when required | Attempt ID and server expiry | Checks account, assignment, schedule, code, max attempts, and active attempt state. |
+| `attempts.questions` / `saveAnswer` | Attempt-owning `STUDENT` | Attempt ID and, for saves, validated question/option choice | Student-safe questions or autosave time | Correct answer keys are never included in Student responses. |
+| `attempts.recordViolation` / `submit` | Attempt-owning `STUDENT` | Attempt ID and allowed integrity event, or no event for submit | Violation state or scored result | Time, score, violation count, and auto-submit decision are server authority. |
+| `attempts.myResults` / `assessments.teacherResults` | Student / owning Teacher | None | Role-safe result history | Results remain tenant and relationship scoped. |
 
-## Attempt and integrity engine
+## Security-relevant errors
 
-| Procedure | Access | Required input | Result | Server rule |
-|---|---|---|---|---|
-| `attempts.start` | Assigned `STUDENT` | Assessment ID and optional access code | Attempt ID, redacted question list, and `expiresAt`. | Performs active-account, assignment, schedule, code, max-attempt, and duplicate-active-attempt checks. |
-| `attempts.saveAnswer` | Attempt-owning `STUDENT` | Attempt ID, question ID, selected option ID | Save timestamp and remaining server time. | Rejects after expiry and validates question membership. |
-| `attempts.recordViolation` | Attempt-owning `STUDENT` | Attempt ID and allowed event type | Updated violation count; may include a submitted result. | Count is maintained exclusively by the server. |
-| `attempts.submit` | Attempt-owning `STUDENT` | Attempt ID | Server-calculated score, percentage, status, and completion time. | Re-loads question answer keys and never accepts score or timing claims. |
-| `results.list` | Teacher owner, School admin, or record-owning student | Filtered role-safe query | Paginated scores and integrity information appropriate to role. | Enforces school and resource scope. |
-
-## Standard error envelope
-
-```json
-{
-  "success": false,
-  "code": "NOT_ASSIGNED_TO_TEST",
-  "message": "You are not assigned to this assessment."
-}
-```
-
-Common assessment authorization codes are `NOT_ASSIGNED_TO_TEST`, `INVALID_ACCESS_CODE`, `ASSESSMENT_NOT_PUBLISHED`, `ASSESSMENT_NOT_STARTED`, `ASSESSMENT_EXPIRED`, `ATTEMPT_ALREADY_COMPLETED`, `ATTEMPT_ALREADY_IN_PROGRESS`, `MAX_ATTEMPTS_REACHED`, `STUDENT_INACTIVE`, and `FORBIDDEN`.
+The procedures use typed error codes. High-value client states include `UNAUTHORIZED`, `FORBIDDEN`, `CONFLICT`, `NOT_FOUND`, `PRECONDITION_FAILED`, `INVALID_ACCESS_CODE`, `NOT_ASSIGNED_TO_TEST`, `ATTEMPT_ALREADY_IN_PROGRESS`, `MAX_ATTEMPTS_REACHED`, and `ATTEMPT_EXPIRED`. Clients should display a safe message and never infer data about another institution from an error response.
