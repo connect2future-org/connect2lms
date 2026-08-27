@@ -9,7 +9,7 @@ import { trpc } from "@/lib/trpc";
 type Preview = {
   batchId?: number;
   summary: { total: number; valid: number; invalid: number; existing: number; duplicates: number; new: number };
-  rows: Array<{ rowNumber: number; name: string; email: string; username: string; errors: string[]; valid: boolean }>;
+  rows: Array<{ rowNumber: number; name: string; email: string; username: string; studentId?: string; usn?: string; branch?: string; semester?: string; section?: string; className?: string; errors: string[]; valid: boolean }>;
 };
 
 export function StudentImportPanel() {
@@ -51,7 +51,7 @@ export function StudentImportPanel() {
         <div>
           <p className="eyebrow">STUDENT DIRECTORY / IMPORT</p>
           <h2 id="student-import-title" className="mt-1 text-xl font-semibold text-white">Validated roster intake</h2>
-          <p className="mt-1 max-w-2xl text-sm text-blue-100/70">Upload a CSV, XLSX, or XLS roster. The server maps known columns, validates each record, and requires a separate confirmation before any student is created or updated.</p>
+          <p className="mt-1 max-w-2xl text-sm text-blue-100/70">Upload a CSV, XLSX, or XLS roster. The server maps known columns, validates each record, and requires a separate confirmation before any student is created or updated. Scroll the preview horizontally to verify academic fields before confirming.</p>
         </div>
         <ShieldCheck className="size-7 shrink-0 text-cyan-300" aria-hidden="true" />
       </div>
@@ -65,8 +65,8 @@ export function StudentImportPanel() {
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
             {Object.entries(preview.summary).map(([label, value]) => <div key={label} className="rounded-lg border border-white/10 bg-slate-950/30 p-3"><p className="text-[10px] uppercase tracking-[0.14em] text-blue-200/65">{label}</p><p className="mt-1 text-lg font-semibold text-white">{value}</p></div>)}
           </div>
-          <div className="max-h-52 overflow-auto rounded-lg border border-white/10">
-            <table className="w-full text-left text-sm"><thead className="sticky top-0 bg-[#08245f] text-blue-100"><tr><th className="p-3">Row</th><th className="p-3">Student</th><th className="p-3">Identity</th><th className="p-3">Validation</th></tr></thead><tbody>{preview.rows.slice(0, 25).map(row => <tr key={row.rowNumber} className="border-t border-white/10 text-blue-50/85"><td className="p-3 font-mono text-xs">{row.rowNumber}</td><td className="p-3">{row.name || "—"}</td><td className="p-3">{row.email || row.username || "—"}</td><td className={`p-3 ${row.valid ? "text-emerald-300" : "text-amber-300"}`}>{row.valid ? "Ready" : row.errors.join(" ")}</td></tr>)}</tbody></table>
+          <div className="max-h-64 overflow-auto rounded-lg border border-white/10">
+            <table className="min-w-[980px] w-full text-left text-sm"><thead className="sticky top-0 bg-[#08245f] text-blue-100"><tr><th className="p-3">Row</th><th className="p-3">Student</th><th className="p-3">Email</th><th className="p-3">Student ID / USN</th><th className="p-3">Branch</th><th className="p-3">Term</th><th className="p-3">Validation</th></tr></thead><tbody>{preview.rows.slice(0, 25).map(row => <tr key={row.rowNumber} className="border-t border-white/10 text-blue-50/85"><td className="p-3 font-mono text-xs">{row.rowNumber}</td><td className="p-3">{row.name || "—"}</td><td className="p-3">{row.email || "—"}<span className="block text-xs text-blue-200/55">{row.username || "username auto-generated"}</span></td><td className="p-3">{row.studentId || row.usn || "—"}<span className="block text-xs text-blue-200/55">{row.usn && row.studentId ? row.usn : ""}</span></td><td className="p-3">{row.branch || "—"}</td><td className="p-3">{[row.semester, row.section, row.className].filter(Boolean).join(" / ") || "—"}</td><td className={`p-3 ${row.valid ? "text-emerald-300" : "text-amber-300"}`}>{row.valid ? "Ready" : row.errors.join(" ")}</td></tr>)}</tbody></table>
           </div>
           <div className="flex flex-col gap-3 rounded-xl border border-cyan-300/20 bg-cyan-950/20 p-4 sm:flex-row sm:items-end">
             <div className="flex-1"><label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-blue-100">Temporary password for new students</label><Input value={password} onChange={event => setPassword(event.target.value)} type="password" className="border-white/20 bg-slate-950/40 text-white" placeholder="At least 12 characters" /></div>

@@ -74,3 +74,7 @@
 - [x] Validate dedicated owner login, route navigation, role boundaries, tests, build, and refreshed ZIP delivery.
 - [x] Align dedicated Super Admin password validation with the configured owner secret length while retaining a minimum secure threshold.
 - [x] Gate Super Admin dashboard queries until the resolved session is confirmed to be `SUPER_ADMIN`, preventing premature 403 requests.
+- [x] Diagnose and repair Excel workbook extraction so real headers, typed cells, blank rows, and student fields map accurately in preview and confirmation.
+- [x] Add regression coverage for Excel extraction and common malformed/title-row workbook shapes.
+- [x] Audit student anti-cheat client events and server enforcement for fullscreen, tab/focus, clipboard, context-menu, shortcuts, violation limits, and auto-submit.
+- [x] Add or strengthen anti-cheat regression coverage and document controlled verification results.

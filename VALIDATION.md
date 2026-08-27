@@ -59,3 +59,19 @@ The dedicated owner form and `auth.ownerLogin` procedure now accept the configur
 The reported nine-character owner password is now accepted by both the browser form and server procedure with an eight-character minimum. The Super Admin registry metrics, institution list, and audit trail queries are disabled until the current identity is confirmed as `SUPER_ADMIN`, removing premature role-permission requests during authentication resolution. A dedicated regression now also verifies that institution credentials are rejected by `auth.ownerLogin`.
 
 Final automated validation passed: `pnpm check`; `pnpm test` with 14 test files, 34 passing assertions, and 3 intentionally skipped live-Atlas assertions; and `pnpm build`. Direct route rendering was verified for the owner login and protected workspace paths. Manual owner credential submission remains the final acceptance step because the private password is not available to the browser verification process.
+
+## Excel extraction and anti-cheat verification
+
+The roster preview now exposes the extracted name, email, generated username, student ID/USN, branch, semester, section, and class fields, so a teacher can verify the actual mapping before confirmation instead of seeing only a name and one identity column. The existing title-row/header alias parser regression remains active for XLSX workbooks.
+
+The student attempt route captures configured visibility changes, window blur, fullscreen exit, copy/paste/cut, context-menu, and shortcut events. Client reporting now deduplicates paired `visibilitychange` and `blur` events from one browser action. The server maps each event to the configured policy and ignores disabled event types; enabled violations are persisted, counted atomically, audited, and can trigger threshold auto-submit. A visible **Enter fullscreen** control was added for browsers that reject automatic fullscreen without a user gesture.
+
+Validation passed with 15 test files, 37 passing assertions, and 3 intentionally skipped live-Atlas assertions, plus TypeScript and production build checks. The anti-cheat helper, server policy mapping, threshold behavior, and Excel parser all have regression coverage. Manual acceptance still requires a real Teacher upload and Student attempt using private institution credentials.
+
+## Expanded import and anti-cheat regression evidence
+
+The Excel parser now has coverage for a title row with blank rows, blank-leading columns, typed numeric identifiers, several preamble rows, alternate Forms-style aliases, and a workbook with no recognizable roster header. Normalized academic fields are passed through a shared `importAcademicFields` contract used by both existing-student updates and new-student profile creation, covering student ID, USN, branch, semester, section, and class.
+
+Anti-cheat coverage now includes client deduplication of paired tab-hidden/window-blur events, preservation of distinct clipboard and shortcut events, server mapping from browser event types to assessment policy switches, threshold auto-submit behavior, and disabled-event suppression. The live attempt UI provides a user-gesture fullscreen control when browser policy blocks automatic fullscreen.
+
+The full validation run passed with 15 test files, 41 passing assertions, and 3 intentionally skipped live-Atlas assertions, plus TypeScript and production build checks. A real Teacher upload and Student attempt remain recommended manual acceptance checks because they require private institution credentials and a real browser event environment.

@@ -66,3 +66,14 @@ export function summarizeImportRows(rows: ImportRow[]) {
 }
 
 export const columnMapping = Object.fromEntries(Object.entries(aliases).map(([field, names]) => [field, names]));
+
+export function importAcademicFields(row: ImportRow) {
+  return {
+    studentId: row.studentId || null,
+    usn: row.usn || null,
+    branch: row.branch || null,
+    semester: row.semester || null,
+    section: row.section || null,
+    className: row.className || null,
+  };
+}

@@ -1,11 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { normalizeImportRows, summarizeImportRows } from "./importUtils";
+import { importAcademicFields, normalizeImportRows, summarizeImportRows } from "./importUtils";
 
 describe("student import normalization", () => {
   it("maps aliases and recognizes valid student records", () => {
     const rows = normalizeImportRows([{ "Student Name": "Mira Patel", "Email Address": "Mira@example.edu", "Roll Number": "CSE-104", Branch: "Computer Science" }]);
     expect(rows[0]).toMatchObject({ name: "Mira Patel", email: "mira@example.edu", username: "cse-104", studentId: "CSE-104", valid: true });
   });
+
+  it("preserves all mapped academic fields for confirmation persistence", () => { const row = normalizeImportRows([{ Name: "Mira Patel", Email: "mira@example.edu", Username: "mira", "Student ID": "ST-1", USN: "USN-1", Department: "ECE", Semester: "3", Section: "A", Class: "BCA" }])[0]!; expect(importAcademicFields(row)).toEqual({ studentId: "ST-1", usn: "USN-1", branch: "ECE", semester: "3", section: "A", className: "BCA" }); });
 
   it("flags duplicated identity data before confirmation", () => {
     const rows = normalizeImportRows([{ Name: "Mira Patel", Email: "mira@example.edu", Username: "mira" }, { Name: "Mira R.", Email: "mira@example.edu", Username: "mira" }]);
