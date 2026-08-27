@@ -78,3 +78,8 @@
 - [x] Add regression coverage for Excel extraction and common malformed/title-row workbook shapes.
 - [x] Audit student anti-cheat client events and server enforcement for fullscreen, tab/focus, clipboard, context-menu, shortcuts, violation limits, and auto-submit.
 - [x] Add or strengthen anti-cheat regression coverage and document controlled verification results.
+- [x] Add a repeatable Teacher MCQ question builder so one assessment can contain as many validated questions as the supported server maximum.
+- [x] Ensure published Student assessment cards clearly distinguish upcoming, active, expired, assigned, and access-code-required states and only offer start when eligible.
+- [x] Add regression coverage for multi-question payloads and published assessment start-window behavior.
+- [x] Explicitly show assigned, access-code-required, upcoming, available, and expired states on each Student assessment card with state-specific messaging.
+- [x] Add regression coverage for Student assessment card state presentation and start-link gating across schedule windows and access-code requirements.

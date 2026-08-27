@@ -75,3 +75,19 @@ The Excel parser now has coverage for a title row with blank rows, blank-leading
 Anti-cheat coverage now includes client deduplication of paired tab-hidden/window-blur events, preservation of distinct clipboard and shortcut events, server mapping from browser event types to assessment policy switches, threshold auto-submit behavior, and disabled-event suppression. The live attempt UI provides a user-gesture fullscreen control when browser policy blocks automatic fullscreen.
 
 The full validation run passed with 15 test files, 41 passing assertions, and 3 intentionally skipped live-Atlas assertions, plus TypeScript and production build checks. A real Teacher upload and Student attempt remain recommended manual acceptance checks because they require private institution credentials and a real browser event environment.
+
+## Repeatable MCQ authoring and published-test availability
+
+The Teacher assessment studio now maintains a repeatable question list. Teachers can add or remove question blocks, enter four options for each question, choose the correct option independently, and submit the complete list in one validated assessment payload. The server continues to enforce a maximum of 100 questions per assessment, so “as many as needed” is supported within the documented safety limit.
+
+New assessments created from the Teacher studio now start immediately by default and remain active for 90 minutes, removing the previous hidden five-minute wait that made newly published tests appear as UPCOMING. Student status labels are centralized and tested as UPCOMING, AVAILABLE, or EXPIRED; the secure gateway remains available only for assigned, published assessments whose current time is within the configured window. Existing assessments that are already UPCOMING or EXPIRED retain those states and must be recreated or rescheduled through the Teacher workflow.
+
+Validation passed with 16 test files, 43 passing assertions, and 3 intentionally skipped live-Atlas assertions, plus TypeScript and production build checks.
+
+## Repeatable questions and Student opening states
+
+The Teacher authoring form now supports repeatable question blocks with add/remove controls and four answer options per question. The client transformation preserves every question in the submitted payload, while the server accepts up to 100 validated questions per assessment.
+
+New Teacher-created assessments start immediately by default for a 90-minute active window, so a Student who is assigned the published test can open it without waiting through a hidden delay. Existing upcoming or expired records remain correctly closed. Student cards now show explicit `ASSIGNED`, `UPCOMING`, `AVAILABLE`, `EXPIRED`, and `ACCESS CODE REQUIRED` states with state-specific messaging and only render the secure-gateway link when the assessment is active.
+
+The final validation passed with 17 test files, 45 passing assertions, and 3 intentionally skipped live-Atlas assertions, plus TypeScript and production build checks.
