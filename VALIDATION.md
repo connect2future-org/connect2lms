@@ -105,3 +105,21 @@ The full validation passed with 17 test files, 46 passing assertions, and 3 inte
 Student assessment cards now join assigned assessments with result records by assessment ID. A submitted, auto-submitted, or expired scored attempt is displayed as `COMPLETED` with a non-startable `View result history` state. During a live attempt, each accepted anti-cheat event immediately produces a warning naming the event and current count; reaching the configured threshold produces an auto-submit warning and transitions to the recorded result screen.
 
 The final validation passed with 17 test files, 47 passing assertions, and 3 intentionally skipped live-Atlas assertions, plus TypeScript and production build checks. Direct regression coverage now includes the submitted-result join and completed card presentation.
+
+## Draft editing, scoped deletion, and Teacher layout
+
+Draft assessment rows now expose **Edit** and **Delete** actions. Edit is intentionally unavailable after publication; draft edits replace the validated question set and preserve or update access-code settings. Published assessment removal is presented as **Archive** so result and audit history are retained. Admin faculty rows, Teacher student rows, and the Super Admin institution registry now expose confirmed **Delete** actions that disable/archive records within server-enforced tenant scope.
+
+The Teacher two-column studio uses an `items-start` grid and an independently scrollable question-editor panel with a viewport-relative maximum height. With many question blocks, the editor scrolls inside its panel instead of increasing the neighboring student-directory height. Route-level regression coverage in `server/lms/removalRouter.test.ts` verifies institution, teacher, student, and assessment removal success paths, scope rejection, and principal side effects. `server/lms/assessmentActions.test.ts` verifies draft-only editability and delete-versus-archive policy.
+
+Validation passed `pnpm check`, 18 test files with 49 passing assertions and 3 intentionally skipped live-Atlas assertions, and `pnpm build`. The protected Teacher route requires an authenticated Teacher session for visual inspection; the anonymous capture correctly renders the session-required boundary.
+
+## Draft editing, delete/archive controls, and responsive Teacher studio
+
+Draft assessment rows now expose **Edit** and **Delete** actions; published rows do not expose Edit and use **Archive** for removal so scored attempts and audit history are retained. Draft edits replace the validated question set and persist access-code settings. Admin faculty rows, Teacher student rows, and the Super Admin institution registry expose confirmed destructive actions whose server procedures remain tenant-scoped.
+
+The Teacher workspace uses an `items-start` two-column grid and an independently scrollable question-editor panel with a viewport-relative maximum height. With many questions, the editor scrolls within its panel while the adjacent student directory remains at its natural height. The protected route requires a Teacher session for visual acceptance; anonymous capture correctly shows the session boundary.
+
+`server/lms/removalRouter.test.ts` now covers eight route-level cases: successful teacher, student, assessment, and institution removal behavior; teacher, student, and assessment scope rejection; and institution not-found rejection. `server/lms/assessmentActions.test.ts` covers draft-only editability and delete-versus-archive policy.
+
+Final validation passed `pnpm check`, `pnpm test` with 19 test files and 57 passing assertions plus 3 intentionally skipped live-Atlas assertions, and `pnpm build`.

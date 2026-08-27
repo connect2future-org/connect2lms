@@ -87,3 +87,9 @@
 - [x] Show an immediate visible warning for every anti-cheat violation with the current count and threshold outcome.
 - [x] Add regression coverage for completed-card state and per-violation warning behavior.
 - [x] Add a direct regression test for the COMPLETED Student assessment-card presentation and submitted-result join logic.
+- [x] Add draft-only assessment edit controls and prevent editing published assessments.
+- [x] Add safe scoped delete/archive actions for institutions, teachers, students, and assessments where appropriate.
+- [x] Refine the Teacher authoring layout with an independently scrolling question editor so added questions do not stretch the adjacent directory column.
+- [x] Add regression coverage for draft edit restrictions, scoped deletion, and responsive question-editor behavior.
+- [x] Add route-level regression tests for assessment removal, teacher deletion, student deletion, and institution archival, including scope rejection and side-effect assertions.
+- [x] Add a verifiable UI regression or documented manual validation step for the Teacher question-editor independent-scroll layout under many questions.
