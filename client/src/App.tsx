@@ -5,12 +5,24 @@ import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
+import TeacherImport from "./pages/TeacherImport";
+import TakeAssessment from "./pages/TakeAssessment";
+import StudentDashboard from "./pages/StudentDashboard";
+import SuperAdminDashboard from "./pages/SuperAdminDashboard";
+import AdminDashboard from "./pages/AdminDashboard";
+import TeacherDashboard from "./pages/TeacherDashboard";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
   return (
     <Switch>
       <Route path={"/"} component={Home} />
+      <Route path={"/teacher/import"} component={TeacherImport} />
+      <Route path={"/student/assessment/:assessmentId"} component={TakeAssessment} />
+      <Route path={"/student"} component={StudentDashboard} />
+      <Route path={"/super-admin"} component={SuperAdminDashboard} />
+      <Route path={"/admin"} component={AdminDashboard} />
+      <Route path={"/teacher"} component={TeacherDashboard} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

@@ -14,7 +14,7 @@ const requireUser = t.middleware(async opts => {
   const { ctx, next } = opts;
 
   if (!ctx.user) {
-    throw new TRPCError({ code: "UNAUTHORIZED", message: UNAUTHED_ERR_MSG });
+    throw new TRPCError({ code: "UNAUTHORIZED", message: "Authentication is required." });
   }
 
   return next({
@@ -31,8 +31,8 @@ export const adminProcedure = t.procedure.use(
   t.middleware(async opts => {
     const { ctx, next } = opts;
 
-    if (!ctx.user || ctx.user.role !== 'admin') {
-      throw new TRPCError({ code: "FORBIDDEN", message: NOT_ADMIN_ERR_MSG });
+    if (!ctx.user || !["SUPER_ADMIN", "ADMIN"].includes(ctx.user.role)) {
+      throw new TRPCError({ code: "FORBIDDEN", message: "Administrator access is required." });
     }
 
     return next({

@@ -338,13 +338,19 @@ function buildCronUser(
     name: userInfo.name || "Manus Scheduled Task",
     email: null,
     loginMethod: null,
-    role: "user",
+    username: null,
+    passwordHash: null,
+    role: "STUDENT",
+    schoolId: null,
+    teacherId: null,
+    status: "ACTIVE",
+    lastLogin: null,
     createdAt: now,
     updatedAt: now,
     lastSignedIn: now,
     taskUid: userInfo.taskUid ?? undefined,
     isCron: true,
-  } as AuthenticatedUser;
+  };
 }
 
 export const sdk = new SDKServer();

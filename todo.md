@@ -1,0 +1,35 @@
+# Project TODO
+
+- [x] Define multi-tenant LMS entities, authorization boundaries, and API contracts.
+- [x] Extend the database schema for schools, role-scoped users, assessments, assignments, attempts, violations, import batches, and audit logs.
+- [x] Implement role-aware authentication context and centralized authorization helpers.
+- [x] Implement Super Admin school and school-admin provisioning workflows.
+- [x] Implement Admin teacher management with school-scoped resource controls.
+- [x] Implement Teacher manual student management and credential reset actions.
+- [x] Implement two-stage CSV/XLSX student import preview, mapping, validation, duplicate detection, and confirmed import.
+- [x] Implement validated MCQ assessment authoring, publication lifecycle, schedules, access codes, randomization, and negative marking.
+- [x] Implement student-specific assessment assignments and secure eligibility checks.
+- [x] Implement server-authoritative attempts, autosave, scoring, result persistence, and duplicate-attempt prevention.
+- [x] Implement browser-based assessment integrity event capture, server-side violations, and threshold auto-submit.
+- [x] Build responsive blueprint-style role dashboards, data tables, search/filter controls, assessment view, reports, and audit log views.
+- [x] Implement result export and comprehensive setup/security/API documentation.
+- [x] Add and run automated unit tests for role scoping, import validation, eligibility, scoring, and integrity threshold behavior.
+- [x] Verify the production build and browser presentation.
+- [x] Package the finished source project as a ZIP file.
+- [x] Add school-scoped teacher profile edit operations and automated ownership tests.
+- [x] Add teacher-owned student profile edit operations and automated ownership tests.
+- [x] Connect the import preview UI to real CSV/XLSX file parsing with file-type and size validation, then preserve the generated import batch ID correctly.
+- [x] Add route-level tests for same-school teacher edits and cross-school rejection.
+- [x] Add route-level tests for owned-student edits and non-owned student rejection.
+- [x] Strengthen route-level people-management tests with explicit cross-school and non-owned record cases.
+- [x] Complete assessment edit, unpublish/archive, and access-code regenerate, revoke, enable, and disable controls with tests.
+- [x] Persist fixed randomized question and option order at attempt start and serve the stored order throughout the attempt.
+- [x] Score and persist expired attempts safely when expiry is detected during autosave or integrity-event handling.
+- [x] Build a secure student test-taking route with fullscreen, focus, clipboard, context-menu, and shortcut integrity event capture.
+- [x] Add end-to-end procedure tests for publication, assignment eligibility, expired-attempt scoring, duplicate active-attempt rejection, and threshold auto-submit.
+- [x] Add router tests for assessment update, lifecycle, and all access-code control actions; collision-check regenerated codes and correct lifecycle copy.
+- [x] Add a valid post-submission student destination and visually verify the assessment route.
+- [x] Add procedure-level coverage for expiry scoring triggered during a mutation and threshold-triggered auto-submit.
+- [x] Add explicit lifecycle test coverage for returning a published assessment to draft.
+- [x] Add working client-side search filters to the Admin faculty table, Teacher student/assessment/result tables, and Student assessment/result tables.
+- [ ] Interactively verify the authorized dashboard, reporting, audit, and assessment flows for each role before final packaging; automated procedure coverage is complete, but multi-account browser acceptance needs provisioned role sessions.

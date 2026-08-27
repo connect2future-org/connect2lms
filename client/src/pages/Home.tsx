@@ -1,33 +1,16 @@
-import { useAuth } from "@/_core/hooks/useAuth";
+import { useState } from "react";
+import { ArrowRight, Building2, GraduationCap, Loader2, ShieldCheck, UsersRound } from "lucide-react";
+import { Link, useLocation } from "wouter";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
-import { Streamdown } from 'streamdown';
+import { Input } from "@/components/ui/input";
+import { trpc } from "@/lib/trpc";
 
-/**
- * All content in this page are only for example, replace with your own feature implementation
- * When building pages, remember your instructions in Frontend Workflow, Frontend Best Practices, Design Guide and Common Pitfalls
- */
+const destinations = { SUPER_ADMIN: "/super-admin", ADMIN: "/admin", TEACHER: "/teacher", STUDENT: "/student" } as const;
+
 export default function Home() {
-  // The useAuth hook provides authentication state.
-  // To implement login/logout, call logout(), or start login from an event
-  // handler: onClick={() => startLogin()} (imported from "@/const"). Never call
-  // startLogin() during render (no href={startLogin()}) — it mints a one-time
-  // nonce cookie and must run only at the moment of navigation.
-  let { user, loading, error, isAuthenticated, logout } = useAuth();
-
-  // If theme is switchable in App.tsx, we can implement theme toggling like this:
-  // const { theme, toggleTheme } = useTheme();
-
-  return (
-    <div className="min-h-screen flex flex-col">
-      <main>
-        {/* Example: lucide-react for icons */}
-        <Loader2 className="animate-spin" />
-        Example Page
-        {/* Example: Streamdown for markdown rendering */}
-        <Streamdown>Any **markdown** content</Streamdown>
-        <Button variant="default">Example Button</Button>
-      </main>
-    </div>
-  );
+  const [, navigate] = useLocation(); const auth = trpc.auth.me.useQuery(); const login = trpc.auth.login.useMutation({ onSuccess: async () => { await auth.refetch(); toast.success("Secure session established."); }, onError: error => toast.error(error.message) }); const [identifier, setIdentifier] = useState(""); const [password, setPassword] = useState("");
+  if (auth.isLoading) return <main className="blueprint-surface flex min-h-screen items-center justify-center text-blue-50"><Loader2 className="mr-3 size-5 animate-spin" />Establishing session context…</main>;
+  if (auth.data) { const destination = destinations[auth.data.role]; return <main className="blueprint-surface flex min-h-screen items-center justify-center p-6"><section className="blueprint-panel w-full max-w-xl p-8"><p className="eyebrow">AUTHENTICATED / {auth.data.role.replace("_", " ")}</p><h1 className="mt-3 text-3xl font-semibold text-white">Welcome, {auth.data.name}.</h1><p className="mt-3 max-w-lg text-sm leading-6 text-blue-100/70">Your role and school scope are verified by the server. Open your assigned operational workspace to continue.</p><Button onClick={() => navigate(destination)} className="mt-7 bg-cyan-300 text-[#05205c] hover:bg-cyan-200">Open {auth.data.role.replace("_", " ")} workspace<ArrowRight className="ml-2 size-4" /></Button></section></main>; }
+  return <main className="blueprint-surface min-h-screen p-4 sm:p-8"><div className="relative mx-auto grid min-h-[calc(100vh-4rem)] max-w-7xl items-center gap-10 lg:grid-cols-[1.25fr_.75fr]"><section><div className="flex items-center gap-3"><div className="grid size-11 place-items-center border border-cyan-300/50 bg-cyan-300/10"><ShieldCheck className="size-6 text-cyan-300" /></div><div><p className="font-semibold tracking-tight text-white">NORTHSTAR</p><p className="eyebrow mt-0.5">SCHOOL ASSESSMENT SYSTEM</p></div></div><p className="eyebrow mt-14">ENGINEERED MULTI-TENANT ASSESSMENT OPERATIONS</p><h1 className="mt-4 max-w-3xl text-4xl font-semibold leading-[1.04] tracking-tight text-white sm:text-6xl">Precision at every <span className="text-cyan-300">assessment boundary.</span></h1><p className="mt-6 max-w-2xl text-base leading-7 text-blue-100/75">A secure platform for provisioned schools, disciplined faculty workflows, controlled student access, and server-authoritative assessment records.</p><div className="mt-9 grid gap-3 sm:grid-cols-3">{[[ShieldCheck, "Strict scope", "Every action derives tenant scope server-side."], [Building2, "Four roles", "Dedicated Super Admin, Admin, Teacher, and Student workspaces."], [GraduationCap, "Authoritative testing", "Timed attempts, scoring, and integrity records stay on the server."]].map(([Icon, title, copy]) => { const FeatureIcon = Icon as typeof ShieldCheck; return <div key={title as string} className="blueprint-panel p-4"><FeatureIcon className="size-5 text-cyan-300" /><p className="mt-4 font-semibold text-white">{title as string}</p><p className="mt-1 text-xs leading-5 text-blue-100/65">{copy as string}</p></div>; })}</div></section><section className="blueprint-panel p-6 sm:p-8"><p className="eyebrow">CREDENTIAL ACCESS / SERVER-VERIFIED</p><h2 className="mt-3 text-2xl font-semibold text-white">Enter your workspace</h2><p className="mt-2 text-sm leading-6 text-blue-100/70">Use your provisioned email or username. The session stores only authenticated identity claims; authorization decisions remain server-side.</p><form onSubmit={event => { event.preventDefault(); login.mutate({ identifier, password }); }} className="mt-7 space-y-4"><label className="block text-sm font-medium text-blue-50">Email or username<Input required value={identifier} onChange={event => setIdentifier(event.target.value)} className="mt-2 border-white/20 bg-slate-950/40 text-white" autoComplete="username" /></label><label className="block text-sm font-medium text-blue-50">Password<Input required value={password} onChange={event => setPassword(event.target.value)} type="password" minLength={8} className="mt-2 border-white/20 bg-slate-950/40 text-white" autoComplete="current-password" /></label><Button disabled={login.isPending} className="w-full bg-cyan-300 text-[#05205c] hover:bg-cyan-200">{login.isPending && <Loader2 className="mr-2 size-4 animate-spin" />}Authenticate and continue<ArrowRight className="ml-2 size-4" /></Button></form><div className="mt-7 border-t border-white/10 pt-5"><p className="eyebrow">PLATFORM HIERARCHY</p><div className="mt-3 grid grid-cols-4 gap-2 text-center text-[10px] font-bold tracking-wide text-blue-100/70"><span><ShieldCheck className="mx-auto mb-1 size-4 text-cyan-300" />SUPER</span><span><Building2 className="mx-auto mb-1 size-4 text-cyan-300" />ADMIN</span><span><UsersRound className="mx-auto mb-1 size-4 text-cyan-300" />TEACHER</span><span><GraduationCap className="mx-auto mb-1 size-4 text-cyan-300" />STUDENT</span></div></div></section></div></main>;
 }
