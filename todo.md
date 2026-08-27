@@ -55,3 +55,4 @@
 - [x] Align the institution-scoped import duplicate summary with the revised duplicate-detection wording and add a regression test.
 - [x] Package the revised MongoDB Atlas commercial LMS source, tests, and documentation as a fresh ZIP file.
 - [x] Improve Super Admin school-provisioning password guidance, browser validation, and error feedback for the required 12-character minimum.
+- [x] Normalize Administrator usernames with whitespace into safe issued identifiers and show the permitted username format before provisioning.
