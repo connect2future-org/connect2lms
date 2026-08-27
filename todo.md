@@ -54,3 +54,4 @@
 - [x] Add isolated live-MongoDB integration tests that exercise actual compound unique-index rejection and state-transition behavior, with cleanup after each test run.
 - [x] Align the institution-scoped import duplicate summary with the revised duplicate-detection wording and add a regression test.
 - [x] Package the revised MongoDB Atlas commercial LMS source, tests, and documentation as a fresh ZIP file.
+- [x] Improve Super Admin school-provisioning password guidance, browser validation, and error feedback for the required 12-character minimum.
