@@ -98,3 +98,4 @@
 - [ ] Manually verify assessment lifecycle end to end: Teacher create/edit/publish, Student open/start/submit, completed state/result history, and schedule/access-code behavior.
 - [ ] Manually verify roster import with a real XLS/XLSX file through preview and confirm, plus destructive actions for institutions, teachers, students, and assessments.
 - [ ] Manually trigger anti-cheat browser events during a real Student attempt and record warnings, counts, and threshold auto-submit; then update QA documentation and rerun validation.
+- [x] Add accessible show/hide eye controls to Super Admin, institution role login, and relevant credential-entry password fields; validate and checkpoint the change.

@@ -49,3 +49,9 @@ The scratch pass found that `/student`, `/teacher/import`, and `/student/assessm
 The final non-credentialed QA pass covered public landing, login, controlled signup, dedicated owner login, all direct protected role paths, direct assessment URLs, invalid-route 404 recovery, and the repaired Teacher import route. Recent application logs showed successful anonymous `auth.me` null responses and no application exception; the observed `BadRequestError: request aborted` corresponded to a browser navigation being canceled, not a persisted server defect.
 
 After the repair, `pnpm check`, `pnpm test`, and `pnpm build` passed: 19 test files, 57 passing assertions, 3 intentionally skipped live-Atlas assertions, and a successful production bundle. Authenticated workflow acceptance still requires the user’s connected browser session.
+
+## Pass 9: password visibility controls
+
+Added a reusable, masked-by-default `PasswordInput` with an accessible eye button, `aria-label`, `aria-pressed`, tooltip title, keyboard focus ring, and sufficient right padding so the control does not obscure entered text. The control is now used by the institution Admin/Teacher/Student login, dedicated Super Admin login, Super Admin institution provisioning, Admin teacher provisioning, Teacher manual student provisioning, and roster-import confirmation fields.
+
+Desktop preview screenshots confirmed the eye control is visible and aligned on `/login` and `/super-admin/login`. `pnpm check`, `pnpm test`, and `pnpm build` pass after the change: 19 test files, 57 passing assertions, 3 intentionally skipped live-Atlas assertions, and a successful production bundle.

@@ -3,6 +3,7 @@ import { FileSpreadsheet, Loader2, ShieldCheck, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/PasswordInput";
 import { parseStudentImportFile } from "@/lib/importFile";
 import { trpc } from "@/lib/trpc";
 
@@ -69,7 +70,7 @@ export function StudentImportPanel() {
             <table className="min-w-[980px] w-full text-left text-sm"><thead className="sticky top-0 bg-[#08245f] text-blue-100"><tr><th className="p-3">Row</th><th className="p-3">Student</th><th className="p-3">Email</th><th className="p-3">Student ID / USN</th><th className="p-3">Branch</th><th className="p-3">Term</th><th className="p-3">Validation</th></tr></thead><tbody>{preview.rows.slice(0, 25).map(row => <tr key={row.rowNumber} className="border-t border-white/10 text-blue-50/85"><td className="p-3 font-mono text-xs">{row.rowNumber}</td><td className="p-3">{row.name || "—"}</td><td className="p-3">{row.email || "—"}<span className="block text-xs text-blue-200/55">{row.username || "username auto-generated"}</span></td><td className="p-3">{row.studentId || row.usn || "—"}<span className="block text-xs text-blue-200/55">{row.usn && row.studentId ? row.usn : ""}</span></td><td className="p-3">{row.branch || "—"}</td><td className="p-3">{[row.semester, row.section, row.className].filter(Boolean).join(" / ") || "—"}</td><td className={`p-3 ${row.valid ? "text-emerald-300" : "text-amber-300"}`}>{row.valid ? "Ready" : row.errors.join(" ")}</td></tr>)}</tbody></table>
           </div>
           <div className="flex flex-col gap-3 rounded-xl border border-cyan-300/20 bg-cyan-950/20 p-4 sm:flex-row sm:items-end">
-            <div className="flex-1"><label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-blue-100">Temporary password for new students</label><Input value={password} onChange={event => setPassword(event.target.value)} type="password" className="border-white/20 bg-slate-950/40 text-white" placeholder="At least 12 characters" /></div>
+            <div className="flex-1"><label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-blue-100">Temporary password for new students</label><PasswordInput value={password} onChange={event => setPassword(event.target.value)} className="border-white/20 bg-slate-950/40 text-white" placeholder="At least 12 characters" /></div>
             <Button onClick={() => void confirm()} disabled={confirmMutation.isPending || preview.summary.valid === 0} className="bg-cyan-300 text-[#05205c] hover:bg-cyan-200">{confirmMutation.isPending ? <Loader2 className="mr-2 size-4 animate-spin" /> : <FileSpreadsheet className="mr-2 size-4" />}Confirm safe import</Button>
           </div>
         </div>
