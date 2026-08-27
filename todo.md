@@ -67,3 +67,4 @@
 - [x] Repair Excel roster import header mapping, normalization, and preview/confirm persistence.
 - [x] Verify Teacher role session context and remove the remaining 403 caused by stale or incorrect identity state.
 - [ ] Re-run automated tests, production build, and package a fresh ZIP after the Teacher workflow fixes.
+- [ ] Restore Super Admin owner access after institution credential-session mode is cleared or absent, without weakening tenant role boundaries.

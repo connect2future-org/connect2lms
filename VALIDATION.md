@@ -37,3 +37,9 @@ The managed workspace contained an authenticated Super Admin owner session for v
 The Teacher authoring flow now accepts concise non-empty question text, renders and submits four required MCQ options, and allows A–D as the correct answer. Publishing automatically creates institution- and teacher-scoped assignments for active students already managed by that Teacher; the existing explicit assignment action remains available for students added later. Excel parsing now detects the actual header row, preserves typed cell values as strings, and supports common roster aliases including email ID, registration number, department, and separate first/last-name columns.
 
 The latest automated run passed `pnpm check`, all regular tests (12 files, 30 assertions), and `pnpm build`. The credential-session context tests also confirm that a Teacher/Admin/Student session is preferred over a Super Admin fallback and that a missing credential session does not silently authorize the owner. The live browser acceptance step remains: refresh the preview, sign in with an issued Teacher account, create/publish a test, and confirm it appears in the assigned Student account; upload an Excel roster and confirm its preview rows before confirmation.
+
+## Super Admin recovery validation
+
+The role boundary now provides a dedicated **Switch to Super Admin sign-in** action when an institution session is active on the Super Admin route. It clears the institution-session mode and preview bearer token before starting the owner-only OAuth flow. This prevents a stale Admin or Teacher identity from blocking the owner workspace while preserving server-side role checks.
+
+The latest validation passed `pnpm check`, `pnpm test` with 13 test files and 31 assertions (3 live-Atlas assertions intentionally skipped), and `pnpm build`.
