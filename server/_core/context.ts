@@ -10,8 +10,10 @@ export type TrpcContext = {
 };
 
 export async function createContext(opts: CreateExpressContextOptions): Promise<TrpcContext> {
+  const credentialModeHeader = opts.req.headers["x-lms-credential-session"];
+  const credentialMode = Array.isArray(credentialModeHeader) ? credentialModeHeader.includes("1") : credentialModeHeader === "1";
   let user = await getLmsSessionUser(opts.req);
-  if (!user) {
+  if (!user && !credentialMode) {
     try {
       user = await sdk.authenticateRequest(opts.req);
     } catch {

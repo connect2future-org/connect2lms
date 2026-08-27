@@ -19,6 +19,6 @@ describe("auth.logout", () => {
     expect(result).toEqual({ success: true, message: "Signed out successfully.", data: null });
     expect(cleared).toHaveLength(1);
     expect(cleared[0]?.name).toBe(LMS_SESSION_COOKIE);
-    expect(cleared[0]?.options).toMatchObject({ maxAge: -1, httpOnly: true, sameSite: "lax", path: "/" });
+    expect(cleared[0]?.options).toMatchObject({ maxAge: -1, httpOnly: true, sameSite: "none", secure: true, path: "/" });
   });
 });

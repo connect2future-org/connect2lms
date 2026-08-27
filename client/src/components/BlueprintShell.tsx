@@ -11,9 +11,9 @@ const roleConfig = {
 } as const;
 
 export function BlueprintShell({ role, children }: { role: keyof typeof roleConfig; children: React.ReactNode }) {
-  const [, navigate] = useLocation();
+  const [, navigate] = useLocation(); const utils = trpc.useUtils();
   const auth = trpc.auth.me.useQuery();
-  const logout = trpc.auth.logout.useMutation({ onSuccess: () => { toast.success("Signed out."); navigate("/"); } });
+  const logout = trpc.auth.logout.useMutation({ onSuccess: () => { try { sessionStorage.removeItem("lms-credential-session"); sessionStorage.removeItem("manus-cookie"); localStorage.removeItem("manus-runtime-user-info"); } catch {} utils.auth.me.setData(undefined, null); toast.success("Signed out."); navigate("/"); } });
   const config = roleConfig[role]; const Icon = config.icon;
   if (auth.isLoading) return <main className="blueprint-surface flex min-h-screen items-center justify-center text-blue-100">Loading authenticated workspace…</main>;
   if (!auth.data) return <main className="blueprint-surface flex min-h-screen items-center justify-center p-6"><div className="blueprint-panel max-w-md p-7"><p className="eyebrow">SESSION REQUIRED</p><h1 className="mt-2 text-2xl font-semibold text-white">Sign in to access this workspace.</h1><Link href="/" className="mt-5 inline-flex rounded-lg bg-cyan-300 px-4 py-2.5 text-sm font-bold text-[#05205c]">Return to sign in</Link></div></main>;

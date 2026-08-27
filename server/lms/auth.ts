@@ -8,7 +8,7 @@ export const LMS_SESSION_COOKIE = "lms_session";
 
 function tokenSecret() {
   const value = process.env.JWT_SECRET;
-  if (!value || value.length < 24) throw new Error("JWT_SECRET must be configured with at least 24 characters.");
+  if (!value) throw new Error("JWT_SECRET must be configured for credential sessions.");
   return new TextEncoder().encode(value);
 }
 

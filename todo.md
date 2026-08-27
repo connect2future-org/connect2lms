@@ -56,3 +56,14 @@
 - [x] Package the revised MongoDB Atlas commercial LMS source, tests, and documentation as a fresh ZIP file.
 - [x] Improve Super Admin school-provisioning password guidance, browser validation, and error feedback for the required 12-character minimum.
 - [x] Normalize Administrator usernames with whitespace into safe issued identifiers and show the permitted username format before provisioning.
+- [x] Make every provisioned institution code persistently labelled as the login code and provide a one-click copy action in the Super Admin registry.
+- [x] Evaluate credential-session signing options; the project will use the existing managed secret at the owner's direction rather than add a separate secret.
+- [x] Relax the incompatible session-secret length check while retaining signed credential-session login validation.
+- [x] Add an authenticated `auth.login` procedure test that verifies a pre-provisioned account receives a valid credential session and that the session resolves through the server context.
+- [ ] Verify a real institution login and authenticated follow-up page access after the managed-secret compatibility fix.
+- [ ] Ensure a valid institution credential session takes precedence over any existing Super Admin browser session.
+- [ ] Fix Teacher MCQ authoring validation so short legitimate content is accepted and four answer options are supported.
+- [ ] Ensure published assessments are visible to eligible assigned students within the institution scope.
+- [ ] Repair Excel roster import header mapping, normalization, and preview/confirm persistence.
+- [ ] Verify Teacher role session context and remove the remaining 403 caused by stale or incorrect identity state.
+- [ ] Re-run automated tests, production build, and package a fresh ZIP after the Teacher workflow fixes.
