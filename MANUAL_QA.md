@@ -67,3 +67,27 @@ The client regression tests currently cover deduplication and message formatting
 The reported warning gap was reproducible at the UI design level: the server accepted `attempts.recordViolation` requests with HTTP 200 responses and returned `violationCount` and `autoSubmitted`, while the Student assessment page relied only on transient Sonner toasts. The current preview session is now anonymous, so the live assessment route correctly stops at **SESSION REQUIRED** and cannot be used for a connected Student retest without browser takeover.
 
 The Student attempt page now stores the latest accepted violation in state and renders a persistent `role="alert"` / `aria-live="assertive"` banner directly above the questions, including the violation type, current count, configured threshold, and auto-submit outcome. The same banner is retained on the auto-submission result view. Toast feedback remains as an additional immediate signal.
+
+## Pass 11: authenticated anti-cheat acceptance — user confirmed
+
+The user retested the Student assessment anti-cheat flow in the authenticated preview after the persistent banner repair and confirmed: **“the feature is working.”** This closes the targeted anti-cheat warning acceptance step. The implementation now provides both immediate toast feedback and a persistent in-test warning banner with event type, violation count, threshold, and auto-submit state; the threshold state remains visible on the result screen.
+
+The broader authenticated acceptance items for Admin/Teacher/Student login, assessment lifecycle, roster import, and destructive actions remain separately tracked until the user confirms those flows.
+
+## Teacher enhancement request — initial inspection
+
+The current Teacher workspace combines manual student provisioning, the MCQ draft builder, the assessment register, and results in one page. Roster import is a separate protected route/component and currently accepts generic CSV/XLSX/XLS headers through the existing alias parser. Assessment creation currently publishes to all active teacher-owned students through the existing assignment mutation, while the dashboard only exposes an `Assign active` action and has no selection model. The upcoming enhancement will keep these concerns separated into compact template/import panels and a publish-target flow rather than adding more fields to every question card.
+
+## Teacher enhancement request — server contract findings
+
+The current assessment API already has a tenant-scoped `assign` mutation accepting a deduplicated list of active student IDs owned by the Teacher, and it rejects inactive or out-of-scope IDs. Publication itself currently changes the assessment to `PUBLISHED` and automatically assigns every active student owned by that Teacher. The existing `manageAccessCode` mutation already supports `REGENERATE`, `REVOKE`, `ENABLE`, and `DISABLE` with institution-scoped collision checks.
+
+The roster import API accepts normalized rows with name, email, generated username, Student ID, USN, branch, semester, section, and class fields. The import parser currently supports broad aliases; the new reference template can use the canonical headers while retaining backward-compatible aliases unless the user explicitly chooses strict-template mode. Question extraction should use a separate canonical worksheet format and feed the same `toAssessmentQuestions` payload used by manual authoring.
+
+## Teacher enhancement request — client parser findings
+
+The client already has SheetJS and Papa Parse available. Roster XLS/XLSX parsing uses a title-row detector and the existing canonicalized alias set, while CSV parsing uses headers directly. The existing assessment transformer converts manual question drafts into four-option MCQs with A–D option IDs and one mark. The question worksheet loader can therefore normalize canonical headers such as `Question`, `Option A`, `Option B`, `Option C`, and `Correct Option` into the exact same draft shape, allowing extracted rows to fill the existing question boxes without introducing a second authoring model.
+
+## Teacher enhancement request — student-source and publishing model
+
+Student profiles currently contain academic identity fields but no import provenance. To enforce “publish only to students present in the Excel sheet” without relying on a UI-only filter, imported profiles will carry the confirmed import-batch ID; manually created profiles will remain unmarked. The Teacher overview will expose that provenance and the imported-student subset. The publish mutation will accept an explicit target mode and selected IDs, verify that every selected student is active, teacher-owned, institution-scoped, and imported, then create assignments only for that set. The existing all-active behavior will remain available only as an explicit target mode and will be labeled clearly in the UI.

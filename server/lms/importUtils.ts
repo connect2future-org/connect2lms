@@ -15,6 +15,8 @@ export type ImportRow = {
   valid: boolean;
 };
 
+export const CANONICAL_ROSTER_HEADERS = ["name", "email", "username", "studentid", "usn", "branch", "semester", "section", "class"] as const;
+
 const aliases: Record<keyof Omit<ImportRow, "rowNumber" | "errors" | "valid">, string[]> = {
   name: ["name", "studentname", "fullname", "studentfullname", "displayname"],
   email: ["email", "emailaddress", "emailid", "mail"],
@@ -39,6 +41,13 @@ function readAlias(row: Record<string, string>, names: string[]) {
 function generatedUsername(email: string, studentId: string) {
   const candidate = (studentId || email.split("@")[0] || "student").toLowerCase().replace(/[^a-z0-9._-]/g, "");
   return candidate.slice(0, 72) || "student";
+}
+
+export function validateCanonicalRosterRows(rows: Array<Record<string, string>>) {
+  const available = new Set(Object.keys(rows[0] ?? {}).map(canonicalHeader));
+  const missing = CANONICAL_ROSTER_HEADERS.filter(header => !available.has(header));
+  if (missing.length) throw new Error(`ROSTER_TEMPLATE_HEADERS_REQUIRED: missing ${missing.join(", ")}. Download the canonical roster template.`);
+  return rows;
 }
 
 export function normalizeImportRows(rows: Array<Record<string, string>>) {

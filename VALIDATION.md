@@ -135,3 +135,11 @@ During investigation, the managed preview network log showed successful `attempt
 A dedicated `client/src/pages/TakeAssessment.test.ts` regression now server-renders the warning banner for both a normal recorded violation and a threshold auto-submit. It verifies the assertive accessibility attributes, event label, human-readable warning, and count/threshold indicator, including the retained auto-submit message.
 
 The corrected final validation passed `pnpm vitest run client/src/pages/TakeAssessment.test.ts`, `pnpm check`, `pnpm test`, and `pnpm build`: 20 test files, 59 passing assertions, 3 intentionally skipped live-Atlas assertions, and a successful production bundle. A connected Student retest remains necessary to observe the banner after a real browser event and to confirm the complete threshold flow in the user’s session.
+
+## Standardized roster and MCQ workbook workflows
+
+The Teacher dashboard now provides canonical XLSX downloads for both student rosters and MCQ question banks. Roster columns are `Name`, `Email`, `Username`, `Student ID`, `USN`, `Branch`, `Semester`, `Section`, and `Class`; question columns are `Question`, `Option A`, `Option B`, `Option C`, `Option D`, and `Correct Option`. Question workbooks in CSV, XLSX, or XLS format are validated and loaded directly into the existing repeatable four-option MCQ boxes.
+
+Confirmed imports persist `importBatchId` on student profiles. Publish and assignment procedures now accept only active, teacher-owned, institution-scoped roster students; the dashboard supports publishing to all confirmed roster students or a selected subset. Invalid, empty, inactive, manual, or out-of-scope target sets are rejected before publication changes state. Draft and published assessment rows expose Generate/Copy or Copy code/Regenerate controls for the quiz unique code.
+
+Validation for this enhancement passed `pnpm check`, `pnpm test` with 21 passing test files, 62 passing assertions, and 3 skipped live-Atlas assertions, plus `pnpm build`. Anonymous screenshots confirmed the protected Teacher routes still render the session-required boundary; authenticated Teacher acceptance remains required for actual file downloads, uploads, and target selection.

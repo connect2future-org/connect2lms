@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { importAcademicFields, normalizeImportRows, summarizeImportRows } from "./importUtils";
+import { importAcademicFields, normalizeImportRows, summarizeImportRows, validateCanonicalRosterRows } from "./importUtils";
 
 describe("student import normalization", () => {
   it("maps aliases and recognizes valid student records", () => {
@@ -20,12 +20,16 @@ describe("student import normalization", () => {
     expect(rows[0]?.name.startsWith("'=HYPERLINK")).toBe(true);
   });
 
+  it("accepts the canonical roster template headers", () => { expect(validateCanonicalRosterRows([{ Name: "Mira", Email: "mira@example.edu", Username: "mira", "Student ID": "ST-1", USN: "USN-1", Branch: "ECE", Semester: "3", Section: "A", Class: "BCA" }])).toHaveLength(1); });
+
   it("counts institution-scoped duplicate identity conflicts in the preview summary", () => {
     const rows = normalizeImportRows([{ Name: "Mira Patel", Email: "mira@example.edu", Username: "mira" }]);
     rows[0]!.errors.push("Identity already exists elsewhere in this institution."); rows[0]!.valid = false;
     expect(summarizeImportRows(rows)).toMatchObject({ total: 1, invalid: 1, duplicates: 1 });
   });
 });
+
+  it("rejects alias-only headers in strict template validation", () => { expect(() => validateCanonicalRosterRows([{ "Student Name": "Asha", "Email ID": "asha@example.edu" }])).toThrow("ROSTER_TEMPLATE_HEADERS_REQUIRED"); });
 
   it("combines first and last name columns and accepts common roster aliases", () => {
     const rows = normalizeImportRows([{ "First Name": "Asha", Surname: "Rao", "Email ID": "asha@example.edu", "Registration Number": "REG-22", Department: "ECE" }]);

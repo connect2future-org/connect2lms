@@ -9,7 +9,7 @@ export type LmsUser = {
 };
 
 export type School = { id: number; name: string; code: string; institutionType: string; contactEmail: string | null; contactPhone: string | null; address: string | null; status: "ACTIVE" | "DISABLED" | "ARCHIVED"; createdByUserId: number; createdAt: Date; updatedAt: Date };
-export type StudentProfile = { id: number; studentUserId: number; schoolId: number; teacherId: number; studentId: string | null; usn: string | null; branch: string | null; semester: string | null; section: string | null; className: string | null; createdAt: Date; updatedAt: Date };
+export type StudentProfile = { id: number; studentUserId: number; schoolId: number; teacherId: number; importBatchId?: number | null; studentId: string | null; usn: string | null; branch: string | null; semester: string | null; section: string | null; className: string | null; createdAt: Date; updatedAt: Date };
 export type AssessmentStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED";
 export type Assessment = { id: number; schoolId: number; teacherId: number; title: string; description: string | null; status: AssessmentStatus; startAt: Date; endAt: Date; durationMinutes: number; maxAttempts: number; accessCodeEnabled: boolean; accessCode: string | null; randomizeQuestions: boolean; randomizeOptions: boolean; negativeMarking: boolean; antiCheat: Record<string, unknown>; createdAt: Date; updatedAt: Date };
 export type AssessmentQuestion = { id: number; assessmentId: number; schoolId: number; position: number; type: "MCQ"; questionText: string; options: Array<{ id: string; text: string }>; correctOptionId: string; marks: number; negativeMarks: number; createdAt: Date; updatedAt: Date };

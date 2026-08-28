@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/PasswordInput";
 import { parseStudentImportFile } from "@/lib/importFile";
+import { downloadRosterTemplate } from "@/lib/excelTemplates";
 import { trpc } from "@/lib/trpc";
 
 type Preview = {
@@ -13,7 +14,7 @@ type Preview = {
   rows: Array<{ rowNumber: number; name: string; email: string; username: string; studentId?: string; usn?: string; branch?: string; semester?: string; section?: string; className?: string; errors: string[]; valid: boolean }>;
 };
 
-export function StudentImportPanel() {
+export function StudentImportPanel({ onImportConfirmed }: { onImportConfirmed?: () => void }) {
   const [preview, setPreview] = useState<Preview | null>(null);
   const [password, setPassword] = useState("");
   const previewMutation = trpc.imports.preview.useMutation();
@@ -41,6 +42,7 @@ export function StudentImportPanel() {
       toast.success(`Import confirmed: ${result.data.summary.created} created and ${result.data.summary.updated} updated.`);
       setPreview(null);
       setPassword("");
+      onImportConfirmed?.();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "The server could not confirm this import.");
     }
@@ -56,6 +58,7 @@ export function StudentImportPanel() {
         </div>
         <ShieldCheck className="size-7 shrink-0 text-cyan-300" aria-hidden="true" />
       </div>
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-cyan-300/15 bg-cyan-950/15 px-4 py-3"><p className="text-xs leading-5 text-blue-100/70">Use the canonical headers <span className="font-mono text-cyan-200">Name, Email, Username, Student ID, USN, Branch, Semester, Section, Class</span> for predictable extraction.</p><Button type="button" variant="outline" onClick={downloadRosterTemplate} className="shrink-0 border-cyan-300/40 text-cyan-100 hover:bg-cyan-300/10"><FileSpreadsheet className="mr-2 size-4" />Download template</Button></div>
       <label className="file-drop-zone flex cursor-pointer items-center gap-3 rounded-xl border border-dashed border-cyan-300/45 px-4 py-5 transition hover:border-cyan-200 hover:bg-white/5">
         {previewMutation.isPending ? <Loader2 className="size-5 animate-spin text-cyan-300" /> : <Upload className="size-5 text-cyan-300" />}
         <span className="text-sm text-blue-50">Choose roster file <span className="text-blue-200/60">(CSV, XLSX, XLS · max. 10 MB)</span></span>

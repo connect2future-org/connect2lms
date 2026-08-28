@@ -100,3 +100,5 @@
 - [ ] Manually trigger anti-cheat browser events during a real Student attempt and record warnings, counts, and threshold auto-submit; then update QA documentation and rerun validation.
 - [x] Add accessible show/hide eye controls to Super Admin, institution role login, and relevant credential-entry password fields; validate and checkpoint the change.
 - [x] Repair missing visible anti-cheat violation warnings during Student assessments, verify threshold auto-submit, add regression coverage, and update QA documentation.
+- [x] Add downloadable structured roster and question Excel templates, constrain import parsing to the reference formats, map questions into the MCQ builder, support publishing to all or selected imported students, and add pre-publication quiz-code regeneration without crowding the Teacher workspace.
+- [x] Enforce canonical roster-template headers in the structured import workflow, add clear rejection messaging for non-template files, and cover strict acceptance/rejection with tests.
