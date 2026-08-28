@@ -143,3 +143,11 @@ The Teacher dashboard now provides canonical XLSX downloads for both student ros
 Confirmed imports persist `importBatchId` on student profiles. Publish and assignment procedures now accept only active, teacher-owned, institution-scoped roster students; the dashboard supports publishing to all confirmed roster students or a selected subset. Invalid, empty, inactive, manual, or out-of-scope target sets are rejected before publication changes state. Draft and published assessment rows expose Generate/Copy or Copy code/Regenerate controls for the quiz unique code.
 
 Validation for this enhancement passed `pnpm check`, `pnpm test` with 21 passing test files, 62 passing assertions, and 3 skipped live-Atlas assertions, plus `pnpm build`. Anonymous screenshots confirmed the protected Teacher routes still render the session-required boundary; authenticated Teacher acceptance remains required for actual file downloads, uploads, and target selection.
+
+## All-student publishing and dedicated Students directory
+
+The Teacher publish contract now supports `ALL_ACTIVE` and `SELECTED_ACTIVE` targets in addition to the backward-compatible imported-roster modes. Active manually provisioned and confirmed-imported students are both available to the Teacher’s publish selector when they belong to the same institution and teaching scope. Selected IDs are deduplicated and validated server-side; empty selections, inactive students, and out-of-scope IDs are rejected before publication changes the assessment lifecycle. The legacy assignment procedure follows the same active-scope rule.
+
+A protected `/teacher/students` route and **Students** sidebar item provide a dedicated roster-aligned directory with Name, Email, Username, Student ID, USN, Branch, Semester, Section, Class, source, and status columns, search, and CSV export. The data comes from the existing tenant-scoped `people.teacher.listStudents` procedure and public user projection.
+
+After this correction, `pnpm check`, `pnpm test`, and `pnpm build` passed. The suite contains 21 passing test files with 65 passing assertions and 3 intentionally skipped live-Atlas assertions. Anonymous screenshots for `/teacher` and `/teacher/students` continue to show the intended session-required boundary; authenticated acceptance remains required for confirming the live publish selector and directory contents.

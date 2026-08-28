@@ -102,3 +102,4 @@
 - [x] Repair missing visible anti-cheat violation warnings during Student assessments, verify threshold auto-submit, add regression coverage, and update QA documentation.
 - [x] Add downloadable structured roster and question Excel templates, constrain import parsing to the reference formats, map questions into the MCQ builder, support publishing to all or selected imported students, and add pre-publication quiz-code regeneration without crowding the Teacher workspace.
 - [x] Enforce canonical roster-template headers in the structured import workflow, add clear rejection messaging for non-template files, and cover strict acceptance/rejection with tests.
+- [x] Repair Teacher publishing so exams can target all active students or a selected subset, and add a dedicated structured Students page with sidebar navigation and tenant-safe data boundaries.

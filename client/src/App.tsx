@@ -12,6 +12,7 @@ import SuperAdminDashboard from "@/pages/SuperAdminDashboard";
 import SuperAdminLogin from "@/pages/SuperAdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 import TeacherDashboard from "./pages/TeacherDashboard";
+import TeacherStudents from "./pages/TeacherStudents";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 
@@ -23,6 +24,7 @@ function Router() {
       <Route path={"/login"} component={Login} />
       <Route path={"/signup"} component={Signup} />
       <Route path={"/teacher/import"} component={TeacherImport} />
+      <Route path={"/teacher/students"} component={TeacherStudents} />
       <Route path={"/student/assessment/:assessmentId"} component={TakeAssessment} />
       <Route path={"/student"} component={StudentDashboard} />
       <Route path={"/super-admin/login"} component={SuperAdminLogin} />

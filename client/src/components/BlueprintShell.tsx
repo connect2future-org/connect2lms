@@ -1,4 +1,4 @@
-import { BookOpenCheck, Building2, ClipboardCheck, GraduationCap, LogOut, ShieldCheck, UsersRound } from "lucide-react";
+import { BookOpenCheck, Building2, ClipboardCheck, ContactRound, GraduationCap, LogOut, ShieldCheck, UsersRound } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
@@ -6,7 +6,7 @@ import { trpc } from "@/lib/trpc";
 const roleConfig = {
   SUPER_ADMIN: { title: "Platform command", label: "SUPER ADMIN", icon: ShieldCheck, home: "/super-admin", links: [{ label: "Institution registry", href: "/super-admin", icon: Building2 }] },
   ADMIN: { title: "School command", label: "SCHOOL ADMIN", icon: Building2, home: "/admin", links: [{ label: "Faculty registry", href: "/admin", icon: UsersRound }] },
-  TEACHER: { title: "Assessment studio", label: "TEACHER", icon: BookOpenCheck, home: "/teacher", links: [{ label: "Command center", href: "/teacher", icon: BookOpenCheck }, { label: "Roster import", href: "/teacher/import", icon: UsersRound }] },
+  TEACHER: { title: "Assessment studio", label: "TEACHER", icon: BookOpenCheck, home: "/teacher", links: [{ label: "Command center", href: "/teacher", icon: BookOpenCheck }, { label: "Students", href: "/teacher/students", icon: ContactRound }, { label: "Roster import", href: "/teacher/import", icon: UsersRound }] },
   STUDENT: { title: "Assessment console", label: "STUDENT", icon: GraduationCap, home: "/student", links: [{ label: "My assessments", href: "/student", icon: ClipboardCheck }] },
 } as const;
 
