@@ -1,5 +1,13 @@
+import dns from "node:dns";
 import { Collection, Db, MongoClient } from "mongodb";
 import type { Assessment, AssessmentAssignment, AssessmentQuestion, Attempt, AuditLog, ImportBatch, IntegrityViolation, LmsUser, School, StudentProfile } from "./lms/types";
+
+// Configure fallback DNS servers (Cloudflare / Google) if local router DNS fails SRV query
+try {
+  dns.setServers(["8.8.8.8", "1.1.1.1", ...dns.getServers()]);
+} catch {
+  /* ignore dns set error */
+}
 
 export type MongoCollections = {
   users: Collection<LmsUser>; schools: Collection<School>; studentProfiles: Collection<StudentProfile>; assessments: Collection<Assessment>; assessmentQuestions: Collection<AssessmentQuestion>; assessmentAssignments: Collection<AssessmentAssignment>; attempts: Collection<Attempt>; integrityViolations: Collection<IntegrityViolation>; importBatches: Collection<ImportBatch>; auditLogs: Collection<AuditLog>;
