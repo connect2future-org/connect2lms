@@ -1,4 +1,4 @@
-import { BookOpenCheck, Building2, ClipboardCheck, ContactRound, GraduationCap, LogOut, ShieldCheck, UsersRound } from "lucide-react";
+import { BookOpenCheck, Building2, ClipboardCheck, ContactRound, FolderPlus, GraduationCap, LogOut, ShieldCheck, Trophy, UsersRound } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
@@ -6,16 +6,24 @@ import { trpc } from "@/lib/trpc";
 const roleConfig = {
   SUPER_ADMIN: { title: "Platform command", label: "SUPER ADMIN", icon: ShieldCheck, home: "/super-admin", links: [{ label: "Institution registry", href: "/super-admin", icon: Building2 }] },
   ADMIN: { title: "School command", label: "SCHOOL ADMIN", icon: Building2, home: "/admin", links: [{ label: "Faculty registry", href: "/admin", icon: UsersRound }] },
-  TEACHER: { title: "Assessment studio", label: "TEACHER", icon: BookOpenCheck, home: "/teacher", links: [{ label: "Command center", href: "/teacher", icon: BookOpenCheck }, { label: "Students", href: "/teacher/students", icon: ContactRound }, { label: "Roster import", href: "/teacher/import", icon: UsersRound }] },
-  STUDENT: { title: "Assessment console", label: "STUDENT", icon: GraduationCap, home: "/student", links: [{ label: "My assessments", href: "/student", icon: ClipboardCheck }] },
+  TEACHER: { title: "Assessment studio", label: "TEACHER", icon: BookOpenCheck, home: "/teacher", links: [{ label: "Command center", href: "/teacher", icon: BookOpenCheck }, { label: "Student tables", href: "/teacher/tables", icon: FolderPlus }, { label: "Student directory", href: "/teacher/students", icon: UsersRound }, { label: "Test results", href: "/teacher/results", icon: Trophy }, { label: "Roster import", href: "/teacher/import", icon: ContactRound }] },
+  STUDENT: { title: "Assessment console", label: "STUDENT", icon: GraduationCap, home: "/student", links: [{ label: "My assessments", href: "/student", icon: ClipboardCheck }, { label: "View results", href: "/student#results", icon: Trophy }] },
 } as const;
 
 export function BlueprintShell({ role, children }: { role: keyof typeof roleConfig; children: React.ReactNode }) {
   const [, navigate] = useLocation(); const utils = trpc.useUtils();
-  const auth = trpc.auth.me.useQuery();
-  const logout = trpc.auth.logout.useMutation({ onSuccess: () => { try { sessionStorage.removeItem("lms-credential-session"); sessionStorage.removeItem("manus-cookie"); localStorage.removeItem("manus-runtime-user-info"); } catch {} utils.auth.me.setData(undefined, null); toast.success("Signed out."); navigate("/"); } });
+  const auth = trpc.auth.me.useQuery(undefined, {
+    onSuccess: (data) => {
+      if (data && 'token' in data && typeof data.token === 'string') {
+        try {
+          sessionStorage.setItem("lms-tab-token", data.token);
+        } catch {}
+      }
+    }
+  });
+  const logout = trpc.auth.logout.useMutation({ onSuccess: () => { try { sessionStorage.removeItem("lms-credential-session"); sessionStorage.removeItem("manus-cookie"); sessionStorage.removeItem("lms-tab-token"); localStorage.removeItem("manus-runtime-user-info"); } catch {} utils.auth.me.setData(undefined, null); toast.success("Signed out."); navigate("/"); } });
   const config = roleConfig[role]; const Icon = config.icon;
-  const switchToOwner = () => { try { sessionStorage.removeItem("lms-credential-session"); sessionStorage.removeItem("manus-cookie"); localStorage.removeItem("manus-runtime-user-info"); } catch {} navigate("/super-admin/login"); };
+  const switchToOwner = () => { try { sessionStorage.removeItem("lms-credential-session"); sessionStorage.removeItem("manus-cookie"); sessionStorage.removeItem("lms-tab-token"); localStorage.removeItem("manus-runtime-user-info"); } catch {} navigate("/super-admin/login"); };
   if (auth.isLoading) return <main className="blueprint-surface flex min-h-screen items-center justify-center text-blue-100">Loading authenticated workspace…</main>;
   if (!auth.data) return <main className="blueprint-surface flex min-h-screen items-center justify-center p-6"><div className="blueprint-panel max-w-md p-7"><p className="eyebrow">SESSION REQUIRED</p><h1 className="mt-2 text-2xl font-semibold text-white">Sign in to access this workspace.</h1>{role === "SUPER_ADMIN" ? <button onClick={switchToOwner} className="mt-5 inline-flex rounded-lg bg-cyan-300 px-4 py-2.5 text-sm font-bold text-[#05205c]">Sign in as Super Admin</button> : <Link href="/" className="mt-5 inline-flex rounded-lg bg-cyan-300 px-4 py-2.5 text-sm font-bold text-[#05205c]">Return to sign in</Link>}</div></main>;
   if (auth.data.role !== role) return <main className="blueprint-surface flex min-h-screen items-center justify-center p-6"><div className="blueprint-panel max-w-md p-7"><p className="eyebrow">ACCESS BOUNDARY</p><h1 className="mt-2 text-2xl font-semibold text-white">This workspace is not assigned to your role.</h1>{role === "SUPER_ADMIN" ? <button onClick={switchToOwner} className="mt-5 inline-flex rounded-lg bg-cyan-300 px-4 py-2.5 text-sm font-bold text-[#05205c]">Switch to Super Admin sign-in</button> : <Link href={roleConfig[auth.data.role].home} className="mt-5 inline-flex rounded-lg bg-cyan-300 px-4 py-2.5 text-sm font-bold text-[#05205c]">Open assigned workspace</Link>}</div></main>;

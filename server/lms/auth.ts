@@ -21,8 +21,18 @@ export async function createLmsSession(user: LmsUser) {
 }
 
 export async function getLmsSessionUser(req: Request): Promise<LmsUser | null> {
-  const cookies = parse(req.headers.cookie ?? "");
-  const token = cookies[LMS_SESSION_COOKIE];
+  let token: string | undefined;
+
+  const authHeader = req.headers.authorization;
+  if (typeof authHeader === "string" && authHeader.startsWith("Bearer ")) {
+    token = authHeader.slice(7).trim();
+  }
+
+  if (!token) {
+    const cookies = parse(req.headers.cookie ?? "");
+    token = cookies[LMS_SESSION_COOKIE];
+  }
+
   if (!token) return null;
   try {
     const verified = await jwtVerify(token, tokenSecret());

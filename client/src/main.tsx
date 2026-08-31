@@ -43,21 +43,30 @@ const trpcClient = trpc.createClient({
       url: "/api/trpc",
       transformer: superjson,
       headers() {
-        // Preview auto-login fallback: when the browser blocks iframe cookies
-        // (Safari ITP / private browsing / WebView), the runtime mirrors the
-        // session into sessionStorage so we can forward it as a Bearer token.
-        // The regular OAuth cookie flow keeps working and takes priority server-side.
+        // Per-tab session isolation: each tab stores its own JWT token in
+        // sessionStorage (which is NOT shared between tabs, unlike cookies).
+        // This prevents logging into role X in one tab from overwriting the
+        // session cookie used by role Y in another tab.
         try {
+          const headers: Record<string, string> = {};
+          const perTabToken = sessionStorage.getItem("lms-tab-token");
+          if (perTabToken) {
+            headers["Authorization"] = `Bearer ${perTabToken}`;
+          }
           const credentialMode = sessionStorage.getItem("lms-credential-session") === "1";
-          const headers: Record<string, string> = credentialMode ? { "x-lms-credential-session": "1" } : {};
-          if (credentialMode) return headers;
-          const raw = sessionStorage.getItem("manus-cookie");
-          if (raw) {
-            const prefix = `${COOKIE_NAME}=`;
-            const pair = raw.split(";").find(s => s.trim().startsWith(prefix));
-            const token = pair?.trim().slice(prefix.length);
-            if (token) {
-              return { ...headers, Authorization: `Bearer ${token}` };
+          if (credentialMode) {
+            headers["x-lms-credential-session"] = "1";
+          }
+          // Legacy fallback for manus-cookie preview flow
+          if (!perTabToken) {
+            const raw = sessionStorage.getItem("manus-cookie");
+            if (raw) {
+              const prefix = `${COOKIE_NAME}=`;
+              const pair = raw.split(";").find(s => s.trim().startsWith(prefix));
+              const token = pair?.trim().slice(prefix.length);
+              if (token) {
+                headers["Authorization"] = `Bearer ${token}`;
+              }
             }
           }
           return headers;

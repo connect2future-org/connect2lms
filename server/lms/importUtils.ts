@@ -38,8 +38,8 @@ function readAlias(row: Record<string, string>, names: string[]) {
   return protectAgainstSpreadsheetFormula(sourceKey ? row[sourceKey] : "");
 }
 
-function generatedUsername(email: string, studentId: string) {
-  const candidate = (studentId || email.split("@")[0] || "student").toLowerCase().replace(/[^a-z0-9._-]/g, "");
+function generatedUsername(email: string, usn: string, studentId: string) {
+  const candidate = (usn || studentId || email.split("@")[0] || "student").toLowerCase().replace(/[^a-z0-9._-]/g, "");
   return candidate.slice(0, 72) || "student";
 }
 
@@ -57,7 +57,7 @@ export function normalizeImportRows(rows: Array<Record<string, string>>) {
     const base = Object.fromEntries(Object.entries(aliases).map(([field, names]) => [field, readAlias(source, names)])) as Omit<ImportRow, "rowNumber" | "errors" | "valid">;
     if (!base.name) base.name = [readAlias(source, ["firstname", "givenname"]), readAlias(source, ["lastname", "surname", "familyname"])].filter(Boolean).join(" ");
     base.email = base.email.toLowerCase();
-    base.username = base.username || generatedUsername(base.email, base.studentId || base.usn);
+    base.username = base.username || generatedUsername(base.email, base.usn, base.studentId);
     const errors: string[] = [];
     if (base.name.length < 2) errors.push("Name is required and must contain at least two characters.");
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(base.email)) errors.push("A valid email address is required.");
@@ -71,7 +71,14 @@ export function normalizeImportRows(rows: Array<Record<string, string>>) {
 }
 
 export function summarizeImportRows(rows: ImportRow[]) {
-  return { total: rows.length, valid: rows.filter(row => row.valid).length, invalid: rows.filter(row => !row.valid).length, existing: rows.filter(row => row.errors.some(error => error.startsWith("Existing student"))).length, duplicates: rows.filter(row => row.errors.some(error => error.includes("Duplicate") || error.includes("elsewhere in this institution"))).length, new: rows.filter(row => row.valid && !row.errors.length).length };
+  return {
+    total: rows.length,
+    valid: rows.filter(row => row.valid).length,
+    invalid: rows.filter(row => !row.valid).length,
+    existing: rows.filter(row => row.errors.some(error => error.includes("Existing student"))).length,
+    duplicates: rows.filter(row => row.errors.some(error => error.includes("Duplicate") || error.includes("elsewhere in this institution") || error.includes("staff account"))).length,
+    new: rows.filter(row => row.valid && !row.errors.length).length
+  };
 }
 
 export const columnMapping = Object.fromEntries(Object.entries(aliases).map(([field, names]) => [field, names]));

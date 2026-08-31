@@ -23,6 +23,25 @@ export function downloadRosterTemplate() {
   ]);
 }
 
+export function exportTableToExcel(tableName: string, students: Array<{ name?: string | null; email?: string | null; username?: string | null; profile?: { studentId?: string | null; usn?: string | null; branch?: string | null; semester?: string | null; section?: string | null; className?: string | null } }>) {
+  const safeName = tableName.trim().replace(/[^a-zA-Z0-9_-]/g, "_") || "student_table";
+  const rows: string[][] = [
+    [...ROSTER_TEMPLATE_HEADERS],
+    ...students.map(s => [
+      s.name || "",
+      s.email || "",
+      s.username || "",
+      s.profile?.studentId || "",
+      s.profile?.usn || "",
+      s.profile?.branch || "",
+      s.profile?.semester || "",
+      s.profile?.section || "",
+      s.profile?.className || "",
+    ]),
+  ];
+  downloadWorkbook(`${safeName}.xlsx`, tableName.slice(0, 30) || "Students", rows);
+}
+
 export function downloadQuestionTemplate() {
   downloadWorkbook("northstar-mcq-template.xlsx", "Questions", [
     [...QUESTION_TEMPLATE_HEADERS],

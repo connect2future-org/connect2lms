@@ -1,6 +1,7 @@
-import { CalendarClock, ClipboardCheck, ExternalLink, GraduationCap, History, Loader2, Trophy } from "lucide-react";
+import { CalendarClock, ClipboardCheck, ExternalLink, GraduationCap, History, Loader2, Trash2, Trophy } from "lucide-react";
 import { Link } from "wouter";
 import { useState } from "react";
+import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { trpc } from "@/lib/trpc";
 import { completedAssessmentIds, getStudentAssessmentPresentation } from "@/lib/assessmentAvailability";
@@ -8,11 +9,190 @@ import { BlueprintShell } from "@/components/BlueprintShell";
 
 function StudentDashboardContent() {
   const [filter, setFilter] = useState("");
+  const utils = trpc.useUtils();
   const assessments = trpc.assessments.studentList.useQuery();
   const results = trpc.attempts.myResults.useQuery();
+  const deleteResult = trpc.attempts.deleteMyAttempt.useMutation({
+    onSuccess: (res) => {
+      toast.success(res.message);
+      void utils.attempts.myResults.invalidate();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
   const loading = assessments.isLoading || results.isLoading;
-  const needle = filter.trim().toLowerCase(); const completedIds = completedAssessmentIds(results.data?.data ?? []); const visibleAssessments = (assessments.data?.data ?? []).filter(assessment => !needle || [assessment.title, assessment.description, assessment.status].some(value => String(value ?? "").toLowerCase().includes(needle))); const visibleResults = (results.data?.data ?? []).filter(result => !needle || [result.title, result.status].some(value => String(value ?? "").toLowerCase().includes(needle)));
-  return <main className="blueprint-surface min-h-screen p-4 sm:p-7"><div className="mx-auto max-w-7xl"><header className="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-end"><div><p className="eyebrow">STUDENT / ASSESSMENT CONTROL</p><h1 className="mt-2 text-3xl font-semibold tracking-tight text-white">My assessment console</h1><p className="mt-2 max-w-2xl text-sm leading-6 text-blue-100/70">Only server-assigned assessments and your own submitted attempt records appear here.</p></div><label className="text-xs font-semibold text-blue-100/75">Filter my records<Input value={filter} onChange={event => setFilter(event.target.value)} className="mt-1.5 border-white/20 bg-slate-950/40 text-white" placeholder="Assessment or status…" /></label></header>{loading ? <div className="blueprint-panel flex min-h-64 items-center justify-center text-blue-100"><Loader2 className="mr-3 size-5 animate-spin" />Loading secure assessment records…</div> : <><section className="grid gap-3 sm:grid-cols-3"><div className="metric-card"><CalendarClock className="size-5 text-cyan-300" /><span>Assigned assessments</span><strong>{assessments.data?.data.length ?? 0}</strong></div><div className="metric-card"><ClipboardCheck className="size-5 text-emerald-300" /><span>Completed attempts</span><strong>{results.data?.data.filter(result => result.status !== "IN_PROGRESS").length ?? 0}</strong></div><div className="metric-card"><Trophy className="size-5 text-amber-300" /><span>Average score</span><strong>{results.data?.data.length ? `${Math.round(results.data.data.reduce((sum, result) => sum + Number(result.percentage), 0) / results.data.data.length)}%` : "—"}</strong></div></section><section className="blueprint-panel mt-5 p-5"><div className="flex items-center justify-between gap-4"><div><p className="eyebrow">AUTHORIZED ASSESSMENTS</p><h2 className="mt-1 text-xl font-semibold text-white">Available and scheduled</h2></div><ClipboardCheck className="size-6 text-cyan-300" /></div>{assessments.error ? <p className="mt-5 rounded-lg border border-rose-300/30 bg-rose-500/10 p-3 text-sm text-rose-100">{assessments.error.message}</p> : visibleAssessments.length ? <div className="mt-5 grid gap-3">{visibleAssessments.map(assessment => { const presentation = getStudentAssessmentPresentation(completedIds.has(assessment.id) ? "COMPLETED" : assessment.status, assessment.accessCodeEnabled); return <article key={assessment.id} className="flex flex-col justify-between gap-4 rounded-xl border border-white/10 bg-slate-950/25 p-4 md:flex-row md:items-center"><div><p className="text-base font-semibold text-white">{assessment.title}</p><p className="mt-1 text-sm text-blue-100/65">{assessment.description || "No assessment description provided."}</p><div className="mt-3 flex flex-wrap gap-2 text-xs text-blue-100/75"><span className="technical-chip">ASSIGNED</span><span className="technical-chip">{presentation.label}</span>{assessment.accessCodeEnabled && <span className="technical-chip">ACCESS CODE REQUIRED</span>}<span className="technical-chip">{assessment.durationMinutes} minutes</span><span className="technical-chip">Opens {new Date(assessment.startAt).toLocaleString()}</span></div><p className="mt-2 text-xs text-blue-100/60">{presentation.detail}</p></div>{presentation.canStart ? <Link href={`/student/assessment/${assessment.id}`} className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-cyan-300 px-4 py-2.5 text-sm font-bold text-[#05205c] transition hover:bg-cyan-200"><ExternalLink className="size-4" />{presentation.action}</Link> : <span className="technical-chip shrink-0">{presentation.action}</span>}</article>; })}</div> : <p className="empty-state">No assigned assessments match the current filter.</p>}</section><section className="blueprint-panel mt-5 p-5"><div className="flex items-center gap-3"><History className="size-6 text-cyan-300" /><div><p className="eyebrow">MY RESULT HISTORY</p><h2 className="mt-1 text-xl font-semibold text-white">Submitted attempt records</h2></div></div>{results.error ? <p className="mt-5 rounded-lg border border-rose-300/30 bg-rose-500/10 p-3 text-sm text-rose-100">{results.error.message}</p> : visibleResults.length ? <div className="mt-5 overflow-auto"><table className="technical-table"><thead><tr><th>Assessment</th><th>Status</th><th>Score</th><th>Integrity events</th><th>Submitted</th></tr></thead><tbody>{visibleResults.map(result => <tr key={result.id}><td className="font-medium text-white">{result.title}</td><td><span className="technical-chip">{result.status}</span></td><td>{result.score} <span className="text-blue-200/60">({result.percentage}%)</span></td><td>{result.violationCount}</td><td>{result.submittedAt ? new Date(result.submittedAt).toLocaleString() : "In progress"}</td></tr>)}</tbody></table></div> : <p className="empty-state">No result history matches the current filter.</p>}</section></>}</div></main>;
+  const publishedResults = (results.data?.data ?? []).filter(r => r.resultsPublished);
+  const avgPercentage = publishedResults.length
+    ? Math.round(publishedResults.reduce((sum, r) => sum + Number(r.percentage ?? 0), 0) / publishedResults.length)
+    : null;
+
+  const needle = filter.trim().toLowerCase();
+  const completedIds = completedAssessmentIds(results.data?.data ?? []);
+  const visibleAssessments = (assessments.data?.data ?? []).filter(assessment =>
+    !needle || [assessment.title, assessment.description, assessment.status].some(value => String(value ?? "").toLowerCase().includes(needle))
+  );
+  const visibleResults = (results.data?.data ?? []).filter(result =>
+    !needle || [result.title, result.status].some(value => String(value ?? "").toLowerCase().includes(needle))
+  );
+
+  return (
+    <main className="blueprint-surface min-h-screen p-4 sm:p-7">
+      <div className="mx-auto max-w-7xl">
+        <header className="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+          <div>
+            <p className="eyebrow">STUDENT / ASSESSMENT CONTROL</p>
+            <h1 className="mt-2 text-3xl font-semibold tracking-tight text-white">My assessment console</h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-blue-100/70">Only server-assigned assessments and your own submitted attempt records appear here.</p>
+          </div>
+          <label className="text-xs font-semibold text-blue-100/75">
+            Filter my records
+            <Input value={filter} onChange={event => setFilter(event.target.value)} className="mt-1.5 border-white/20 bg-slate-950/40 text-white" placeholder="Assessment or status…" />
+          </label>
+        </header>
+
+        {loading ? (
+          <div className="blueprint-panel flex min-h-64 items-center justify-center text-blue-100">
+            <Loader2 className="mr-3 size-5 animate-spin" />
+            Loading secure assessment records…
+          </div>
+        ) : (
+          <>
+            {/* Metrics */}
+            <section className="grid gap-3 sm:grid-cols-3">
+              <div className="metric-card">
+                <CalendarClock className="size-5 text-cyan-300" />
+                <span>Assigned assessments</span>
+                <strong>{assessments.data?.data.length ?? 0}</strong>
+              </div>
+              <div className="metric-card">
+                <ClipboardCheck className="size-5 text-emerald-300" />
+                <span>Completed attempts</span>
+                <strong>{results.data?.data.filter(result => result.status !== "IN_PROGRESS").length ?? 0}</strong>
+              </div>
+              <div className="metric-card">
+                <Trophy className="size-5 text-amber-300" />
+                <span>Average score</span>
+                <strong>{avgPercentage !== null ? `${avgPercentage}%` : "—"}</strong>
+              </div>
+            </section>
+
+            {/* Assigned Assessments */}
+            <section className="blueprint-panel mt-5 p-5">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="eyebrow">AUTHORIZED ASSESSMENTS</p>
+                  <h2 className="mt-1 text-xl font-semibold text-white">Available and scheduled</h2>
+                </div>
+                <ClipboardCheck className="size-6 text-cyan-300" />
+              </div>
+
+              {assessments.error ? (
+                <p className="mt-5 rounded-lg border border-rose-300/30 bg-rose-500/10 p-3 text-sm text-rose-100">{assessments.error.message}</p>
+              ) : visibleAssessments.length ? (
+                <div className="mt-5 grid gap-3">
+                  {visibleAssessments.map(assessment => {
+                    const presentation = getStudentAssessmentPresentation(
+                      completedIds.has(assessment.id) ? "COMPLETED" : assessment.status,
+                      assessment.accessCodeEnabled
+                    );
+                    return (
+                      <article key={assessment.id} className="flex flex-col justify-between gap-4 rounded-xl border border-white/10 bg-slate-950/25 p-4 md:flex-row md:items-center">
+                        <div>
+                          <p className="text-base font-semibold text-white">{assessment.title}</p>
+                          <p className="mt-1 text-sm text-blue-100/65">{assessment.description || "No assessment description provided."}</p>
+                          <div className="mt-3 flex flex-wrap gap-2 text-xs text-blue-100/75">
+                            <span className="technical-chip">ASSIGNED</span>
+                            <span className="technical-chip">{assessment.durationMinutes} minutes</span>
+                            {assessment.accessCodeEnabled && <span className="technical-chip">ACCESS CODE REQUIRED</span>}
+                            {/* Status chip — only show if relevant (not WINDOW CLOSED) */}
+                            {presentation.canStart && (
+                              <span className="technical-chip border-emerald-400/40 text-emerald-300">AVAILABLE</span>
+                            )}
+                            {completedIds.has(assessment.id) && (
+                              <span className="technical-chip border-cyan-400/40 text-cyan-300">COMPLETED</span>
+                            )}
+                          </div>
+                        </div>
+                        {presentation.canStart ? (
+                          <Link href={`/student/assessment/${assessment.id}`} className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-cyan-300 px-4 py-2.5 text-sm font-bold text-[#05205c] transition hover:bg-cyan-200">
+                            <ExternalLink className="size-4" />
+                            {presentation.action}
+                          </Link>
+                        ) : completedIds.has(assessment.id) ? (
+                          <span className="technical-chip shrink-0 border-cyan-400/40 text-cyan-300">Completed</span>
+                        ) : (
+                          <span className="technical-chip shrink-0">Scheduled</span>
+                        )}
+                      </article>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="empty-state">No assigned assessments match the current filter.</p>
+              )}
+            </section>
+
+            {/* Results History */}
+            <section id="results" className="blueprint-panel mt-5 p-5">
+              <div className="flex items-center gap-3">
+                <History className="size-6 text-cyan-300" />
+                <div>
+                  <p className="eyebrow">MY RESULT HISTORY</p>
+                  <h2 className="mt-1 text-xl font-semibold text-white">Submitted attempt records</h2>
+                </div>
+              </div>
+
+              {results.error ? (
+                <p className="mt-5 rounded-lg border border-rose-300/30 bg-rose-500/10 p-3 text-sm text-rose-100">{results.error.message}</p>
+              ) : visibleResults.length ? (
+                <div className="mt-5 overflow-auto">
+                  <table className="technical-table">
+                    <thead>
+                      <tr>
+                        <th>Assessment</th>
+                        <th>Status</th>
+                        <th>Score</th>
+                        <th>Integrity events</th>
+                        <th>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {visibleResults.map(result => (
+                        <tr key={result.id}>
+                          <td className="font-medium text-white">{result.title}</td>
+                          <td><span className="technical-chip">{result.status}</span></td>
+                          <td>
+                            {result.resultsPublished ? (
+                              <>{result.score} <span className="text-blue-200/60">({result.percentage}%)</span></>
+                            ) : (
+                              <span className="technical-chip border-amber-400/40 text-amber-200">Pending Publish</span>
+                            )}
+                          </td>
+                          <td>{result.violationCount}</td>
+                          <td>
+                            <button
+                              type="button"
+                              onClick={() => { if (confirm(`Delete test result for "${result.title}" from your history?`)) deleteResult.mutate({ attemptId: result.id }); }}
+                              className="technical-chip inline-flex items-center gap-1 text-rose-200 hover:border-rose-300"
+                            >
+                              <Trash2 className="size-3" />
+                              Delete result
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <p className="empty-state">No result history matches the current filter.</p>
+              )}
+            </section>
+          </>
+        )}
+      </div>
+    </main>
+  );
 }
 
 export default function StudentDashboard() {

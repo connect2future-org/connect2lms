@@ -18,6 +18,7 @@ export default function SuperAdminLogin() {
         sessionStorage.setItem("lms-credential-session", "1");
         sessionStorage.removeItem("manus-cookie");
         localStorage.removeItem("manus-runtime-user-info");
+        if (result.data.token) sessionStorage.setItem("lms-tab-token", result.data.token);
       } catch {}
       utils.auth.me.setData(undefined, result.data.user);
       await utils.auth.me.invalidate();

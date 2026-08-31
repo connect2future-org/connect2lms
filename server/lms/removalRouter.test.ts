@@ -20,12 +20,20 @@ const actor = (role: "ADMIN" | "TEACHER" | "SUPER_ADMIN") => ({ user: { id: 10, 
 afterEach(() => { vi.clearAllMocks(); });
 
 describe("scoped removal procedures", () => {
-  it("deactivates a teacher and their active students within the Admin school", async () => {
-    const c = { users: { findOne: vi.fn().mockResolvedValue({ id: 21, role: "TEACHER" }), updateOne: vi.fn(), updateMany: vi.fn() } };
+  it("hard-purges a teacher and all their mapped data within the Admin school", async () => {
+    const c = {
+      users: { findOne: vi.fn().mockResolvedValue({ id: 21, role: "TEACHER" }), deleteOne: vi.fn(), deleteMany: vi.fn() },
+      studentProfiles: { find: vi.fn().mockReturnValue({ toArray: vi.fn().mockResolvedValue([]) }), deleteMany: vi.fn() },
+      assessments: { find: vi.fn().mockReturnValue({ toArray: vi.fn().mockResolvedValue([]) }), deleteMany: vi.fn() },
+      assessmentAssignments: { deleteMany: vi.fn() },
+      attempts: { deleteMany: vi.fn() },
+      studentTables: { deleteMany: vi.fn(), updateMany: vi.fn() },
+      importBatches: { deleteMany: vi.fn() },
+    };
     mocks.getDb.mockResolvedValue({}); mocks.collections.mockReturnValue(c);
     await peopleRouter.createCaller(actor("ADMIN")).admin.deleteTeacher({ teacherId: 21 });
-    expect(c.users.updateOne).toHaveBeenCalledWith({ id: 21 }, expect.objectContaining({ $set: expect.objectContaining({ status: "DISABLED" }) }));
-    expect(c.users.updateMany).toHaveBeenCalledWith(expect.objectContaining({ schoolId: 7, teacherId: 21 }), expect.objectContaining({ $set: expect.objectContaining({ status: "DISABLED" }) }));
+    expect(c.users.deleteOne).toHaveBeenCalledWith({ id: 21 });
+    expect(c.studentTables.deleteMany).toHaveBeenCalledWith({ schoolId: 7, teacherId: 21 });
   });
 
   it("rejects teacher deletion outside the Admin school scope", async () => {
@@ -40,12 +48,21 @@ describe("scoped removal procedures", () => {
     await expect(peopleRouter.createCaller(actor("TEACHER")).teacher.deleteStudent({ studentId: 999 })).rejects.toMatchObject({ code: "FORBIDDEN" });
   });
 
-  it("revokes a managed student and their active assignments", async () => {
-    const c = { users: { findOne: vi.fn().mockResolvedValue({ id: 31, role: "STUDENT" }), updateOne: vi.fn() }, assessmentAssignments: { updateMany: vi.fn() } };
+  it("hard-purges a student: deletes user, profile, assignments, attempts, and table memberships", async () => {
+    const c = {
+      users: { findOne: vi.fn().mockResolvedValue({ id: 31, role: "STUDENT" }), deleteOne: vi.fn() },
+      studentProfiles: { deleteMany: vi.fn() },
+      assessmentAssignments: { deleteMany: vi.fn() },
+      attempts: { deleteMany: vi.fn() },
+      studentTables: { updateMany: vi.fn() },
+    };
     mocks.getDb.mockResolvedValue({}); mocks.collections.mockReturnValue(c);
     await peopleRouter.createCaller(actor("TEACHER")).teacher.deleteStudent({ studentId: 31 });
-    expect(c.users.updateOne).toHaveBeenCalledWith({ id: 31 }, expect.objectContaining({ $set: expect.objectContaining({ status: "DISABLED" }) }));
-    expect(c.assessmentAssignments.updateMany).toHaveBeenCalledWith(expect.objectContaining({ studentId: 31, schoolId: 7, status: "ASSIGNED" }), expect.objectContaining({ $set: expect.objectContaining({ status: "REVOKED" }) }));
+    expect(c.users.deleteOne).toHaveBeenCalledWith({ id: 31 });
+    expect(c.studentProfiles.deleteMany).toHaveBeenCalledWith({ studentUserId: 31 });
+    expect(c.assessmentAssignments.deleteMany).toHaveBeenCalledWith({ studentId: 31, schoolId: 7 });
+    expect(c.attempts.deleteMany).toHaveBeenCalledWith({ studentId: 31, schoolId: 7 });
+    expect(c.studentTables.updateMany).toHaveBeenCalledWith({ schoolId: 7 }, { $pull: { studentUserIds: 31 } });
   });
 
   it("hard-deletes a draft assessment but archives a published assessment", async () => {
@@ -64,16 +81,27 @@ describe("scoped removal procedures", () => {
     await expect(assessmentRouter.createCaller(actor("TEACHER")).remove({ assessmentId: 999 })).rejects.toMatchObject({ code: "FORBIDDEN" });
   });
 
-  it("archives an institution and disables its active records", async () => {
-    const c = { schools: { findOne: vi.fn().mockResolvedValue({ id: 7 }), updateOne: vi.fn() }, users: { updateMany: vi.fn() }, assessments: { updateMany: vi.fn() }, assessmentAssignments: { updateMany: vi.fn() } };
+  it("hard-deletes an institution and ALL its data", async () => {
+    const c = {
+      schools: { findOne: vi.fn().mockResolvedValue({ id: 7, name: "Test School" }), deleteOne: vi.fn() },
+      users: { deleteMany: vi.fn() },
+      studentProfiles: { deleteMany: vi.fn() },
+      assessments: { deleteMany: vi.fn() },
+      assessmentAssignments: { deleteMany: vi.fn() },
+      attempts: { deleteMany: vi.fn() },
+      studentTables: { deleteMany: vi.fn() },
+      importBatches: { deleteMany: vi.fn() },
+    };
     mocks.getDb.mockResolvedValue({}); mocks.collections.mockReturnValue(c);
     await platformRouter.createCaller(actor("SUPER_ADMIN")).schools.remove({ schoolId: 7 });
-    expect(c.schools.updateOne).toHaveBeenCalledWith({ id: 7 }, expect.objectContaining({ $set: expect.objectContaining({ status: "ARCHIVED" }) }));
-    expect(c.users.updateMany).toHaveBeenCalledWith({ schoolId: 7 }, expect.anything());
-    expect(c.assessments.updateMany).toHaveBeenCalledWith(expect.objectContaining({ schoolId: 7 }), expect.anything());
+    expect(c.schools.deleteOne).toHaveBeenCalledWith({ id: 7 });
+    expect(c.users.deleteMany).toHaveBeenCalledWith({ schoolId: 7 });
+    expect(c.assessments.deleteMany).toHaveBeenCalledWith({ schoolId: 7 });
+    expect(c.studentProfiles.deleteMany).toHaveBeenCalledWith({ schoolId: 7 });
+    expect(c.attempts.deleteMany).toHaveBeenCalledWith({ schoolId: 7 });
   });
 
-  it("rejects institution archival for non-existent schools", async () => {
+  it("rejects institution deletion for non-existent schools", async () => {
     const c = { schools: { findOne: vi.fn().mockResolvedValue(null) } };
     mocks.getDb.mockResolvedValue({}); mocks.collections.mockReturnValue(c);
     await expect(platformRouter.createCaller(actor("SUPER_ADMIN")).schools.remove({ schoolId: 999 })).rejects.toMatchObject({ code: "NOT_FOUND" });

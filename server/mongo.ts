@@ -1,6 +1,6 @@
 import dns from "node:dns";
 import { Collection, Db, MongoClient } from "mongodb";
-import type { Assessment, AssessmentAssignment, AssessmentQuestion, Attempt, AuditLog, ImportBatch, IntegrityViolation, LmsUser, School, StudentProfile } from "./lms/types";
+import type { Assessment, AssessmentAssignment, AssessmentQuestion, Attempt, AuditLog, ImportBatch, IntegrityViolation, LmsUser, School, StudentProfile, StudentTable } from "./lms/types";
 
 // Configure fallback DNS servers (Cloudflare / Google) if local router DNS fails SRV query
 try {
@@ -10,7 +10,7 @@ try {
 }
 
 export type MongoCollections = {
-  users: Collection<LmsUser>; schools: Collection<School>; studentProfiles: Collection<StudentProfile>; assessments: Collection<Assessment>; assessmentQuestions: Collection<AssessmentQuestion>; assessmentAssignments: Collection<AssessmentAssignment>; attempts: Collection<Attempt>; integrityViolations: Collection<IntegrityViolation>; importBatches: Collection<ImportBatch>; auditLogs: Collection<AuditLog>;
+  users: Collection<LmsUser>; schools: Collection<School>; studentProfiles: Collection<StudentProfile>; studentTables: Collection<StudentTable>; assessments: Collection<Assessment>; assessmentQuestions: Collection<AssessmentQuestion>; assessmentAssignments: Collection<AssessmentAssignment>; attempts: Collection<Attempt>; integrityViolations: Collection<IntegrityViolation>; importBatches: Collection<ImportBatch>; auditLogs: Collection<AuditLog>;
 };
 
 let client: MongoClient | null = null;
@@ -24,7 +24,7 @@ export async function getMongoDb() {
 }
 
 export function collections(db: Db): MongoCollections {
-  return { users: db.collection<LmsUser>("users"), schools: db.collection<School>("schools"), studentProfiles: db.collection<StudentProfile>("studentProfiles"), assessments: db.collection<Assessment>("assessments"), assessmentQuestions: db.collection<AssessmentQuestion>("assessmentQuestions"), assessmentAssignments: db.collection<AssessmentAssignment>("assessmentAssignments"), attempts: db.collection<Attempt>("attempts"), integrityViolations: db.collection<IntegrityViolation>("integrityViolations"), importBatches: db.collection<ImportBatch>("importBatches"), auditLogs: db.collection<AuditLog>("auditLogs") };
+  return { users: db.collection<LmsUser>("users"), schools: db.collection<School>("schools"), studentProfiles: db.collection<StudentProfile>("studentProfiles"), studentTables: db.collection<StudentTable>("studentTables"), assessments: db.collection<Assessment>("assessments"), assessmentQuestions: db.collection<AssessmentQuestion>("assessmentQuestions"), assessmentAssignments: db.collection<AssessmentAssignment>("assessmentAssignments"), attempts: db.collection<Attempt>("attempts"), integrityViolations: db.collection<IntegrityViolation>("integrityViolations"), importBatches: db.collection<ImportBatch>("importBatches"), auditLogs: db.collection<AuditLog>("auditLogs") };
 }
 
 export async function nextId(db: Db, collection: string) {
