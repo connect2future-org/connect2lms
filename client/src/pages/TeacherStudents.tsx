@@ -116,12 +116,10 @@ export default function TeacherStudents() {
             <thead>
               <tr>
                 <th>Student</th>
-                <th>Login identity</th>
-                <th>Student ID / USN</th>
+                <th>USN</th>
                 <th>Branch</th>
                 <th>Semester</th>
                 <th>Section</th>
-                <th>Class</th>
                 <th>Source</th>
                 <th>Status</th>
               </tr>
@@ -133,21 +131,18 @@ export default function TeacherStudents() {
                     <p className="font-medium text-white">{student.name || "Unnamed student"}</p>
                     <p className="text-xs text-blue-100/60">{student.email || "No email"}</p>
                   </td>
-                  <td className="font-mono text-xs text-cyan-100">{student.username || "—"}</td>
                   <td>
-                    <p>{student.profile?.studentId || "—"}</p>
-                    <p className="text-xs text-blue-200/55">{student.profile?.usn || "No USN"}</p>
+                    <p className="font-mono text-xs">{student.profile?.usn || "No USN"}</p>
                   </td>
                   <td>{student.profile?.branch || "—"}</td>
                   <td>{student.profile?.semester || "—"}</td>
                   <td>{student.profile?.section || "—"}</td>
-                  <td>{student.profile?.className || "—"}</td>
                   <td><span className="technical-chip">{student.profile?.importBatchId ? "Excel roster" : "Manual"}</span></td>
                   <td><span className="technical-chip">{student.status}</span></td>
                 </tr>
               )) : (
                 <tr>
-                  <td colSpan={9}>
+                  <td colSpan={7}>
                     <p className="empty-state">{query.isLoading ? "Loading student records…" : "No student records match this search."}</p>
                   </td>
                 </tr>

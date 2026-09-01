@@ -606,7 +606,7 @@ export default function TeacherTables() {
                       />
                     </th>
                     <th>Student</th>
-                    <th>Identity / USN</th>
+                    <th>USN</th>
                     <th>
                       <span className="flex items-center gap-1">
                         Credentials
@@ -648,19 +648,16 @@ export default function TeacherTables() {
                             <p className="text-xs text-blue-100/60">{s.email}</p>
                           </td>
                           <td className="font-mono text-xs">
-                            {s.profile?.usn || s.profile?.studentId || "—"}
+                            {s.profile?.usn || "—"}
                           </td>
                           <td className="font-mono text-xs">
                             {(() => {
                               const knownPw = studentPasswordMap[s.id];
-                              const displayPw = knownPw || s.profile?.usn || s.profile?.studentId || "USN";
+                              const displayPw = knownPw || s.profile?.usn || "USN";
                               return (
                                 <>
                                   <span className={`font-semibold ${knownPw ? "text-emerald-300" : "text-cyan-300"}`}>
                                     {showPassword ? displayPw : "••••••••"}
-                                  </span>
-                                  <span className="block text-[10px] text-blue-200/50">
-                                    Login ID: {s.username || s.profile?.usn || s.email}
                                   </span>
                                 </>
                               );
@@ -669,7 +666,7 @@ export default function TeacherTables() {
                           <td>
                             {s.profile?.branch || "—"}{" "}
                             <span className="text-xs text-blue-200/50">
-                              {[s.profile?.semester, s.profile?.section, s.profile?.className].filter(Boolean).join(" / ")}
+                              {[s.profile?.semester, s.profile?.section].filter(Boolean).join(" / ")}
                             </span>
                           </td>
                           <td>

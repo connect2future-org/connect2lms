@@ -163,7 +163,7 @@ function StudentDashboardContent() {
                           <td><span className="technical-chip">{result.status}</span></td>
                           <td>
                             {result.resultsPublished ? (
-                              <>{result.score} <span className="text-blue-200/60">({result.percentage}%)</span></>
+                              <>{result.score ?? 0} / {(result as any).totalMarks ?? 0} <span className="text-blue-200/60">({result.percentage}%)</span></>
                             ) : (
                               <span className="technical-chip border-amber-400/40 text-amber-200">Pending Publish</span>
                             )}

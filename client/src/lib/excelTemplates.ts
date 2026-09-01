@@ -1,7 +1,7 @@
 import * as XLSX from "xlsx";
 import type { AssessmentQuestionDraft } from "./assessmentForm";
 
-export const ROSTER_TEMPLATE_HEADERS = ["Name", "Email", "Username", "Student ID", "USN", "Branch", "Semester", "Section", "Class"] as const;
+export const ROSTER_TEMPLATE_HEADERS = ["Name", "Email", "USN", "Branch", "Semester", "Section"] as const;
 export const QUESTION_TEMPLATE_HEADERS = ["Question", "Option A", "Option B", "Option C", "Option D", "Correct Option"] as const;
 const MAX_BYTES = 10 * 1024 * 1024;
 
@@ -19,7 +19,7 @@ function downloadWorkbook(filename: string, sheetName: string, rows: Array<Array
 export function downloadRosterTemplate() {
   downloadWorkbook("northstar-roster-template.xlsx", "Students", [
     [...ROSTER_TEMPLATE_HEADERS],
-    ["Aarav Sharma", "aarav@example.edu", "aarav.sharma", "STU-001", "USN001", "Computer Science", "1", "A", "BSc CS"],
+    ["Aarav Sharma", "aarav@example.edu", "USN001", "Computer Science", "1", "A"],
   ]);
 }
 
@@ -30,13 +30,10 @@ export function exportTableToExcel(tableName: string, students: Array<{ name?: s
     ...students.map(s => [
       s.name || "",
       s.email || "",
-      s.username || "",
-      s.profile?.studentId || "",
       s.profile?.usn || "",
       s.profile?.branch || "",
       s.profile?.semester || "",
       s.profile?.section || "",
-      s.profile?.className || "",
     ]),
   ];
   downloadWorkbook(`${safeName}.xlsx`, tableName.slice(0, 30) || "Students", rows);

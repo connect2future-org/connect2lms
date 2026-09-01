@@ -16,7 +16,7 @@ export const importRouter = router({
     const actor = requireRole(ctx.user, ["TEACHER"]); const db = await getDb(); const c = collections(db); try { validateCanonicalRosterRows(input.rows); } catch (error) { throw new TRPCError({ code: "BAD_REQUEST", message: error instanceof Error ? error.message : "ROSTER_TEMPLATE_HEADERS_REQUIRED" }); } const normalized = normalizeImportRows(input.rows);
     for (const row of normalized) {
       if (!row.valid) continue;
-      let existing = await c.users.findOne({ schoolId: actor.schoolId!, $or: [{ email: row.email }, { username: row.username }] });
+      let existing = await c.users.findOne({ schoolId: actor.schoolId!, email: row.email });
       if (!existing && (row.usn || row.studentId)) {
         const profileMatch = await c.studentProfiles.findOne({ schoolId: actor.schoolId!, $or: [...(row.usn ? [{ usn: row.usn }] : []), ...(row.studentId ? [{ studentId: row.studentId }] : [])] });
         if (profileMatch) existing = await c.users.findOne({ id: profileMatch.studentUserId, schoolId: actor.schoolId! });
@@ -27,7 +27,7 @@ export const importRouter = router({
           row.errors.push(owned ? "Existing student will be updated after confirmation." : "Existing student in institution (will be updated and added to your roster after confirmation).");
           row.valid = true;
         } else {
-          row.errors.push("Email or username belongs to a non-student staff account.");
+          row.errors.push("Email belongs to a non-student staff account.");
           row.valid = false;
         }
       }
@@ -38,7 +38,7 @@ export const importRouter = router({
     const actor = requireRole(ctx.user, ["TEACHER"]); const db = await getDb(); const c = collections(db); const batch = await c.importBatches.findOne({ id: input.batchId, teacherId: actor.id, schoolId: actor.schoolId! }); if (!batch || batch.status !== "PREVIEWED") throw new TRPCError({ code: "NOT_FOUND", message: "A pending import preview in your scope was not found." }); const rows = batch.rows as unknown as ImportRow[]; const result = { total: rows.length, created: 0, updated: 0, duplicates: 0, invalid: 0 };
     for (const row of rows) {
       if (!row.valid) { result.invalid += 1; continue; }
-      let existing = await c.users.findOne({ schoolId: actor.schoolId!, $or: [{ email: row.email }, { username: row.username }] });
+      let existing = await c.users.findOne({ schoolId: actor.schoolId!, email: row.email });
       if (!existing && (row.usn || row.studentId)) {
         const profileMatch = await c.studentProfiles.findOne({ schoolId: actor.schoolId!, $or: [...(row.usn ? [{ usn: row.usn }] : []), ...(row.studentId ? [{ studentId: row.studentId }] : [])] });
         if (profileMatch) existing = await c.users.findOne({ id: profileMatch.studentUserId, schoolId: actor.schoolId! });

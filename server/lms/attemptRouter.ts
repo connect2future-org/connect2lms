@@ -32,8 +32,16 @@ export const attemptRouter = router({
     const actor = requireRole(ctx.user, ["STUDENT"]);
     const c = collections(await getDb());
     const records = await c.attempts.find({ studentId: actor.id, schoolId: actor.schoolId! }).sort({ createdAt: -1 }).toArray();
-    const tests = records.length ? await c.assessments.find({ id: { $in: Array.from(new Set(records.map(record => record.assessmentId))) }, schoolId: actor.schoolId! }).toArray() : [];
+    const testIds = Array.from(new Set(records.map(record => record.assessmentId)));
+    const [tests, questions] = await Promise.all([
+      testIds.length ? c.assessments.find({ id: { $in: testIds }, schoolId: actor.schoolId! }).toArray() : [],
+      testIds.length ? c.assessmentQuestions.find({ assessmentId: { $in: testIds }, schoolId: actor.schoolId! }).toArray() : [],
+    ]);
     const testById = new Map(tests.map(test => [test.id, test]));
+    const totalMarksByAssessment = new Map<number, number>();
+    for (const q of questions) {
+      totalMarksByAssessment.set(q.assessmentId, (totalMarksByAssessment.get(q.assessmentId) ?? 0) + Number(q.marks));
+    }
     return {
       success: true,
       message: "Result history loaded.",
@@ -48,6 +56,7 @@ export const attemptRouter = router({
           status: record.status,
           resultsPublished: published,
           score: published ? record.score : null,
+          totalMarks: totalMarksByAssessment.get(test.id) ?? 0,
           percentage: published ? record.percentage : null,
           violationCount: record.violationCount,
           submittedAt: record.submittedAt

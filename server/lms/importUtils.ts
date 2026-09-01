@@ -15,7 +15,7 @@ export type ImportRow = {
   valid: boolean;
 };
 
-export const CANONICAL_ROSTER_HEADERS = ["name", "email", "username", "studentid", "usn", "branch", "semester", "section", "class"] as const;
+export const CANONICAL_ROSTER_HEADERS = ["name", "email", "usn", "branch", "semester", "section"] as const;
 
 const aliases: Record<keyof Omit<ImportRow, "rowNumber" | "errors" | "valid">, string[]> = {
   name: ["name", "studentname", "fullname", "studentfullname", "displayname"],
@@ -38,8 +38,8 @@ function readAlias(row: Record<string, string>, names: string[]) {
   return protectAgainstSpreadsheetFormula(sourceKey ? row[sourceKey] : "");
 }
 
-function generatedUsername(email: string, usn: string, studentId: string) {
-  const candidate = (usn || studentId || email.split("@")[0] || "student").toLowerCase().replace(/[^a-z0-9._-]/g, "");
+function generatedUsername(name: string, email: string, usn: string) {
+  const candidate = (name || usn || email.split("@")[0] || "student").toLowerCase().replace(/[^a-z0-9._-]/g, "");
   return candidate.slice(0, 72) || "student";
 }
 
@@ -52,20 +52,16 @@ export function validateCanonicalRosterRows(rows: Array<Record<string, string>>)
 
 export function normalizeImportRows(rows: Array<Record<string, string>>) {
   const seenEmails = new Set<string>();
-  const seenUsernames = new Set<string>();
   return rows.slice(0, 1000).map((source, index): ImportRow => {
     const base = Object.fromEntries(Object.entries(aliases).map(([field, names]) => [field, readAlias(source, names)])) as Omit<ImportRow, "rowNumber" | "errors" | "valid">;
     if (!base.name) base.name = [readAlias(source, ["firstname", "givenname"]), readAlias(source, ["lastname", "surname", "familyname"])].filter(Boolean).join(" ");
     base.email = base.email.toLowerCase();
-    base.username = base.username || generatedUsername(base.email, base.usn, base.studentId);
+    base.username = generatedUsername(base.name, base.email, base.usn);
     const errors: string[] = [];
     if (base.name.length < 2) errors.push("Name is required and must contain at least two characters.");
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(base.email)) errors.push("A valid email address is required.");
-    if (!/^[a-zA-Z0-9._-]{3,80}$/.test(base.username)) errors.push("Username must use 3–80 letters, numbers, dots, underscores, or hyphens.");
     if (seenEmails.has(base.email)) errors.push("Duplicate email in this file.");
-    if (seenUsernames.has(base.username)) errors.push("Duplicate username in this file.");
     if (base.email) seenEmails.add(base.email);
-    if (base.username) seenUsernames.add(base.username);
     return { rowNumber: index + 2, ...base, errors, valid: errors.length === 0 };
   });
 }

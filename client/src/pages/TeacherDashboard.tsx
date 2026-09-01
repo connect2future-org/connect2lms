@@ -41,11 +41,39 @@ export default function TeacherDashboard() {
   const [selectedStudentIds, setSelectedStudentIds] = useState<number[]>([]);
   const [questionFileInputKey, setQuestionFileInputKey] = useState(0);
 
+  const [targetTableForNewStudent, setTargetTableForNewStudent] = useState<number | "none">("none");
+
   const overview = trpc.people.teacher.overview.useQuery();
   const tests = trpc.assessments.teacherList.useQuery();
   const results = trpc.assessments.teacherResults.useQuery();
+  const tablesQuery = trpc.tables.list.useQuery();
 
-  const createStudent = trpc.people.teacher.createStudent.useMutation({ onSuccess: () => { toast.success("Student created inside your teaching scope."); setStudentForm(emptyStudent); void utils.people.teacher.overview.invalidate(); }, onError: error => toast.error(error.message) });
+  const addStudentsToTable = trpc.tables.addStudents.useMutation();
+
+  const createStudent = trpc.people.teacher.createStudent.useMutation({
+    onSuccess: async (res) => {
+      const createdStudentId = res.data?.id;
+      if (createdStudentId && targetTableForNewStudent !== "none") {
+        try {
+          await addStudentsToTable.mutateAsync({
+            tableId: targetTableForNewStudent,
+            studentUserIds: [createdStudentId],
+          });
+          const tableName = tablesList.find(t => t.id === targetTableForNewStudent)?.name || "table";
+          toast.success(`Student created and added to "${tableName}".`);
+        } catch (err) {
+          toast.error("Student was created, but could not be added to the selected table.");
+        }
+      } else {
+        toast.success("Student created inside your teaching scope.");
+      }
+      setStudentForm(emptyStudent);
+      setTargetTableForNewStudent("none");
+      void utils.people.teacher.overview.invalidate();
+      void utils.tables.list.invalidate();
+    },
+    onError: (error) => toast.error(error.message),
+  });
   const createAssessment = trpc.assessments.create.useMutation({ onSuccess: () => { toast.success("Validated MCQ assessment saved as a draft."); setAssessmentForm(emptyAssessment); setQuestionFileInputKey(key => key + 1); void utils.assessments.teacherList.invalidate(); }, onError: error => toast.error(error.message) });
   const updateAssessment = trpc.assessments.update.useMutation({ onSuccess: () => { toast.success("Draft assessment updated."); setAssessmentForm(emptyAssessment); setQuestionFileInputKey(key => key + 1); void utils.assessments.teacherList.invalidate(); }, onError: error => toast.error(error.message) });
   const publish = trpc.assessments.publish.useMutation({ onSuccess: result => { toast.success(result.message); setPublishTarget(null); setSelectedStudentIds([]); void utils.assessments.teacherList.invalidate(); }, onError: error => toast.error(error.message) });
@@ -83,7 +111,6 @@ export default function TeacherDashboard() {
   const submitAssessment = (event: React.FormEvent) => { event.preventDefault(); const startAt = new Date(); const endAt = new Date(startAt.getTime() + 90 * 60_000); const payload = { title: assessmentForm.title, startAt, endAt, durationMinutes: Number(assessmentForm.durationMinutes), maxAttempts: 1, accessCodeEnabled: Boolean(assessmentForm.accessCode), accessCode: assessmentForm.accessCode || undefined, randomizeQuestions: true, randomizeOptions: true, negativeMarking: false, antiCheat: { requireFullscreen: true, detectTabSwitch: true, detectWindowBlur: true, detectFullscreenExit: true, detectClipboard: true, detectContextMenu: true, detectShortcuts: true, violationThreshold: 5, autoSubmitOnThreshold: true }, questions: toAssessmentQuestions(assessmentForm.questions) }; if (assessmentForm.editingId) updateAssessment.mutate({ ...payload, assessmentId: assessmentForm.editingId }); else createAssessment.mutate(payload); };
   const publishSelected = () => { if (!publishTarget) return; if (!selectedStudentCount) { toast.error("Select at least one active student in your teaching scope."); return; } publish.mutate({ assessmentId: publishTarget.assessmentId, target: "SELECTED_ACTIVE", studentIds: selectedStudentIds }); };
 
-  const tablesQuery = trpc.tables.list.useQuery();
   const tablesList = (tablesQuery.data?.data ?? []) as Array<{ id: number; name: string; students: StudentRow[] }>;
   const [selectedPublishTableId, setSelectedPublishTableId] = useState<number | null>(null);
   const targetTable = tablesList.find(t => t.id === selectedPublishTableId);
@@ -322,6 +349,7 @@ export default function TeacherDashboard() {
                 <thead>
                   <tr>
                     <th>Assessment</th>
+                    <th>Published Target</th>
                     <th>Window</th>
                     <th>Code</th>
                     <th>Status</th>
@@ -330,68 +358,100 @@ export default function TeacherDashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {visibleTests.map((test) => (
-                    <tr key={test.id}>
-                      <td className="font-semibold text-white">
-                        {test.title}
-                        <span className="block text-xs text-blue-200/55">{test.questions?.length ?? 0} questions</span>
-                      </td>
-                      <td>{new Date(test.startAt).toLocaleString()}</td>
-                      <td>{test.accessCodeEnabled ? <span className="font-mono text-xs">{test.accessCode || "—"}</span> : "Disabled"}</td>
-                      <td>
-                        <span className="technical-chip">{test.status}</span>
-                      </td>
-                      <td>
-                        {test.status === "PUBLISHED" ? (
-                          test.resultsPublished ? (
-                            <span className="technical-chip border-emerald-400/40 text-emerald-300">Published</span>
+                  {visibleTests.map((test) => {
+                    const assignedCount = (test as any).assignedCount ?? 0;
+                    const assignedTables = ((test as any).assignedTables ?? []) as string[];
+                    return (
+                      <tr key={test.id}>
+                        <td className="font-semibold text-white">
+                          {test.title}
+                          <span className="block text-xs text-blue-200/55">{test.questions?.length ?? 0} questions</span>
+                        </td>
+                        <td>
+                          {test.status === "PUBLISHED" || assignedCount > 0 ? (
+                            <div className="space-y-1">
+                              <span className="technical-chip border-cyan-400/40 text-cyan-300">
+                                {assignedCount} student{assignedCount !== 1 ? "s" : ""}
+                              </span>
+                              {assignedTables.length > 0 && (
+                                <div className="flex flex-wrap gap-1 mt-1">
+                                  {assignedTables.map((tName) => (
+                                    <span key={tName} className="technical-chip text-[10px] bg-slate-900/60">
+                                      {tName}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
                           ) : (
-                            <span className="technical-chip border-amber-400/40 text-amber-200">Hidden</span>
-                          )
-                        ) : (
-                          <span className="text-xs text-blue-200/50">—</span>
-                        )}
-                      </td>
-                      <td>
-                        <div className="flex flex-wrap gap-2">
-                          {test.status === "DRAFT" && (
-                            <>
-                              <button
-                                onClick={() => {
-                                  setAssessmentForm({
-                                    title: test.title,
-                                    durationMinutes: String(test.durationMinutes),
-                                    accessCode: test.accessCode ?? "",
-                                    editingId: test.id,
-                                    questions: (test.questions ?? []).map((question) => ({
-                                      questionText: question.questionText,
-                                      firstOption: question.options.find((option) => option.id === "a")?.text ?? "",
-                                      secondOption: question.options.find((option) => option.id === "b")?.text ?? "",
-                                      thirdOption: question.options.find((option) => option.id === "c")?.text ?? "",
-                                      fourthOption: question.options.find((option) => option.id === "d")?.text ?? "",
-                                      correctOption: question.correctOptionId,
-                                    })),
-                                  });
-                                  window.scrollTo({ top: 0, behavior: "smooth" });
-                                }}
-                                className="technical-chip inline-flex items-center gap-1 hover:border-cyan-200"
-                              >
-                                <BookOpenCheck className="size-3" />
-                                Edit
-                              </button>
-                              <button onClick={() => setPublishTarget({ assessmentId: test.id, title: test.title })} className="technical-chip hover:border-cyan-200">
-                                Publish
-                              </button>
-                            </>
+                            <span className="text-xs text-blue-200/50">Not published</span>
                           )}
-                          {test.status === "PUBLISHED" && (
-                            <button
-                              onClick={() => toggleResultsPublish.mutate({ assessmentId: test.id, publish: !test.resultsPublished })}
-                              className={`technical-chip ${test.resultsPublished ? "border-amber-300/40 text-amber-200 hover:border-amber-200" : "border-emerald-300/40 text-emerald-300 hover:border-emerald-200"}`}
-                            >
-                              {test.resultsPublished ? "Hide results" : "Publish results"}
-                            </button>
+                        </td>
+                        <td>{new Date(test.startAt).toLocaleString()}</td>
+                        <td>{test.accessCodeEnabled ? <span className="font-mono text-xs">{test.accessCode || "—"}</span> : "Disabled"}</td>
+                        <td>
+                          <span className="technical-chip">{test.status}</span>
+                        </td>
+                        <td>
+                          {test.status === "PUBLISHED" ? (
+                            test.resultsPublished ? (
+                              <span className="technical-chip border-emerald-400/40 text-emerald-300">Published</span>
+                            ) : (
+                              <span className="technical-chip border-amber-400/40 text-amber-200">Hidden</span>
+                            )
+                          ) : (
+                            <span className="text-xs text-blue-200/50">—</span>
                           )}
+                        </td>
+                        <td>
+                          <div className="flex flex-wrap gap-2">
+                            {test.status === "DRAFT" && (
+                              <>
+                                <button
+                                  onClick={() => {
+                                    setAssessmentForm({
+                                      title: test.title,
+                                      durationMinutes: String(test.durationMinutes),
+                                      accessCode: test.accessCode ?? "",
+                                      editingId: test.id,
+                                      questions: (test.questions ?? []).map((question) => ({
+                                        questionText: question.questionText,
+                                        firstOption: question.options.find((option) => option.id === "a")?.text ?? "",
+                                        secondOption: question.options.find((option) => option.id === "b")?.text ?? "",
+                                        thirdOption: question.options.find((option) => option.id === "c")?.text ?? "",
+                                        fourthOption: question.options.find((option) => option.id === "d")?.text ?? "",
+                                        correctOption: question.correctOptionId,
+                                      })),
+                                    });
+                                    window.scrollTo({ top: 0, behavior: "smooth" });
+                                  }}
+                                  className="technical-chip inline-flex items-center gap-1 hover:border-cyan-200"
+                                >
+                                  <BookOpenCheck className="size-3" />
+                                  Edit
+                                </button>
+                                <button onClick={() => setPublishTarget({ assessmentId: test.id, title: test.title })} className="technical-chip hover:border-cyan-200">
+                                  Publish
+                                </button>
+                              </>
+                            )}
+                            {test.status === "PUBLISHED" && (
+                              <>
+                                <button
+                                  onClick={() => setPublishTarget({ assessmentId: test.id, title: test.title })}
+                                  className="technical-chip border-cyan-300/40 text-cyan-200 hover:border-cyan-200"
+                                  title="Assign/Republish this test to additional students or tables"
+                                >
+                                  Republish / Assign
+                                </button>
+                                <button
+                                  onClick={() => toggleResultsPublish.mutate({ assessmentId: test.id, publish: !test.resultsPublished })}
+                                  className={`technical-chip ${test.resultsPublished ? "border-amber-300/40 text-amber-200 hover:border-amber-200" : "border-emerald-300/40 text-emerald-300 hover:border-emerald-200"}`}
+                                >
+                                  {test.resultsPublished ? "Hide results" : "Publish results"}
+                                </button>
+                              </>
+                            )}
                           {test.accessCode && (
                             <>
                               <button onClick={() => void copyValue(test.accessCode, "Quiz code")} className="technical-chip inline-flex items-center gap-1 hover:border-cyan-200">
@@ -432,7 +492,8 @@ export default function TeacherDashboard() {
                         </div>
                       </td>
                     </tr>
-                  ))}
+                  );
+                })}
                 </tbody>
               </table>
             </div>
@@ -461,7 +522,7 @@ export default function TeacherDashboard() {
         >
           <label className="text-xs font-semibold text-blue-100/75">
             Full Name
-            <Input required value={studentForm.name} onChange={(e) => setStudentForm((c) => ({ ...c, name: e.target.value }))} className="mt-1 border-white/20 bg-slate-950/40 text-white" placeholder="e.g. Tanvi Gupt" />
+            <Input required value={studentForm.name} onChange={(e) => setStudentForm((c) => ({ ...c, name: e.target.value }))} className="mt-1 border-white/20 bg-slate-950/40 text-white" placeholder="e.g. Tanvi Gupta" />
           </label>
           <label className="text-xs font-semibold text-blue-100/75">
             Email Address
@@ -470,10 +531,6 @@ export default function TeacherDashboard() {
           <label className="text-xs font-semibold text-blue-100/75">
             USN / Roll Number
             <Input value={studentForm.usn} onChange={(e) => setStudentForm((c) => ({ ...c, usn: e.target.value }))} className="mt-1 border-white/20 bg-slate-950/40 text-white" placeholder="e.g. 1MS21CS001" />
-          </label>
-          <label className="text-xs font-semibold text-blue-100/75">
-            Student ID Code
-            <Input value={studentForm.studentId} onChange={(e) => setStudentForm((c) => ({ ...c, studentId: e.target.value }))} className="mt-1 border-white/20 bg-slate-950/40 text-white" placeholder="e.g. STU-001" />
           </label>
           <label className="text-xs font-semibold text-blue-100/75">
             Branch / Dept
@@ -487,17 +544,28 @@ export default function TeacherDashboard() {
             Section
             <Input value={studentForm.section} onChange={(e) => setStudentForm((c) => ({ ...c, section: e.target.value }))} className="mt-1 border-white/20 bg-slate-950/40 text-white" placeholder="e.g. Section A" />
           </label>
-          <label className="text-xs font-semibold text-blue-100/75">
-            Class / Batch
-            <Input value={studentForm.className} onChange={(e) => setStudentForm((c) => ({ ...c, className: e.target.value }))} className="mt-1 border-white/20 bg-slate-950/40 text-white" placeholder="e.g. Batch of 2026" />
+          <label className="text-xs font-semibold text-blue-100/75 sm:col-span-2 lg:col-span-2">
+            Assign to Student Table <span className="font-normal text-blue-100/50">(optional)</span>
+            <select
+              value={targetTableForNewStudent}
+              onChange={(e) => setTargetTableForNewStudent(e.target.value === "none" ? "none" : Number(e.target.value))}
+              className="mt-1 flex h-9 w-full rounded-md border border-white/20 bg-slate-950/40 px-3 py-1 text-xs text-white shadow-xs transition-colors focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring"
+            >
+              <option value="none">Master Directory Only (No custom table)</option>
+              {tablesList.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.name} ({t.students.length} students)
+                </option>
+              ))}
+            </select>
           </label>
-          <label className="text-xs font-semibold text-blue-100/75 sm:col-span-2 lg:col-span-3">
-            Temporary Password <span className="font-normal text-blue-100/50">(optional — defaults to USN)</span>
-            <PasswordInput value={studentForm.temporaryPassword} onChange={(e) => setStudentForm((c) => ({ ...c, temporaryPassword: e.target.value }))} className="mt-1 border-white/20 bg-slate-950/40 text-white" placeholder="Leave empty to use USN" />
+          <label className="text-xs font-semibold text-blue-100/75 sm:col-span-2 lg:col-span-1">
+            Temporary Password <span className="font-normal text-blue-100/50">(optional)</span>
+            <PasswordInput value={studentForm.temporaryPassword} onChange={(e) => setStudentForm((c) => ({ ...c, temporaryPassword: e.target.value }))} className="mt-1 border-white/20 bg-slate-950/40 text-white" placeholder="Defaults to USN" />
           </label>
           <div className="flex items-end sm:col-span-2 lg:col-span-1">
-            <Button disabled={createStudent.isPending || !studentForm.name || !studentForm.email} className="w-full bg-cyan-300 text-[#05205c] hover:bg-cyan-200">
-              {createStudent.isPending && <Loader2 className="mr-2 size-4 animate-spin" />}
+            <Button disabled={createStudent.isPending || addStudentsToTable.isPending || !studentForm.name || !studentForm.email} className="w-full bg-cyan-300 text-[#05205c] hover:bg-cyan-200">
+              {(createStudent.isPending || addStudentsToTable.isPending) && <Loader2 className="mr-2 size-4 animate-spin" />}
               Add student
             </Button>
           </div>
