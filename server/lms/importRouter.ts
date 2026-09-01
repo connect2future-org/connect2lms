@@ -49,22 +49,30 @@ export const importRouter = router({
       const fallbackPassword = (row.usn || row.studentId || row.username || "").trim();
       const defaultPassword = customPassword.length >= 6 ? customPassword : (fallbackPassword.length >= 6 ? fallbackPassword : customPassword);
       const passwordHash = await bcrypt.hash(defaultPassword, 12);
-      if (existing) {
-        if (existing.role !== "STUDENT") { result.duplicates += 1; continue; }
-        await c.users.updateOne({ id: existing.id }, { $set: { name: row.name, status: "ACTIVE", passwordHash, updatedAt: now } });
-        await c.studentProfiles.updateOne(
-          { studentUserId: existing.id },
-          {
-            $set: { ...importAcademicFields(row), teacherId: actor.id, schoolId: actor.schoolId!, importBatchId: batch.id, updatedAt: now },
-            $setOnInsert: { id: await nextId(db, "studentProfiles"), createdAt: now }
-          },
-          { upsert: true }
-        );
-        result.updated += 1; continue;
+      try {
+        if (existing) {
+          if (existing.role !== "STUDENT") { result.duplicates += 1; continue; }
+          await c.users.updateOne({ id: existing.id }, { $set: { name: row.name, status: "ACTIVE", passwordHash, updatedAt: now } });
+          await c.studentProfiles.updateOne(
+            { studentUserId: existing.id },
+            {
+              $set: { ...importAcademicFields(row), teacherId: actor.id, schoolId: actor.schoolId!, importBatchId: batch.id, updatedAt: now },
+              $setOnInsert: { id: await nextId(db, "studentProfiles"), createdAt: now }
+            },
+            { upsert: true }
+          );
+          result.updated += 1; continue;
+        }
+        const user: LmsUser = { id: await nextId(db, "users"), openId: null, name: row.name, email: row.email, loginMethod: "credentials", username: row.username, passwordHash, role: "STUDENT", schoolId: actor.schoolId!, teacherId: actor.id, status: "ACTIVE", lastLogin: null, createdAt: now, updatedAt: now, lastSignedIn: now };
+        const profile: StudentProfile = { id: await nextId(db, "studentProfiles"), studentUserId: user.id, schoolId: actor.schoolId!, teacherId: actor.id, importBatchId: batch.id, ...importAcademicFields(row), createdAt: now, updatedAt: now };
+        await c.users.insertOne(user); await c.studentProfiles.insertOne(profile); result.created += 1;
+      } catch (err: unknown) {
+        if ((err as { code?: number }).code === 11000) {
+          result.duplicates += 1;
+        } else {
+          throw err;
+        }
       }
-      const user: LmsUser = { id: await nextId(db, "users"), openId: null, name: row.name, email: row.email, loginMethod: "credentials", username: row.username, passwordHash, role: "STUDENT", schoolId: actor.schoolId!, teacherId: actor.id, status: "ACTIVE", lastLogin: null, createdAt: now, updatedAt: now, lastSignedIn: now };
-      const profile: StudentProfile = { id: await nextId(db, "studentProfiles"), studentUserId: user.id, schoolId: actor.schoolId!, teacherId: actor.id, importBatchId: batch.id, ...importAcademicFields(row), createdAt: now, updatedAt: now };
-      await c.users.insertOne(user); await c.studentProfiles.insertOne(profile); result.created += 1;
     }
     await c.importBatches.updateOne({ id: batch.id, teacherId: actor.id, schoolId: actor.schoolId! }, { $set: { status: "CONFIRMED", confirmedAt: new Date(), updatedAt: new Date() } }); await writeAudit(db, { actorId: actor.id, actorRole: actor.role, schoolId: actor.schoolId, action: "STUDENT_IMPORT_CONFIRMED", targetType: "IMPORT_BATCH", targetId: batch.id, metadata: result, ...requestAuditContext(ctx.req) }); return { success: true, message: "Student import confirmed.", data: { summary: result, errors: [] } };
   }),
