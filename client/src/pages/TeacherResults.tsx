@@ -16,6 +16,7 @@ type ResultRow = {
   studentEmail: string | null;
   status: string;
   score: number | null;
+  totalMarks: number;
   percentage: number | null;
   violationCount: number;
   submittedAt: Date | string | null;
@@ -279,18 +280,10 @@ export default function TeacherResults() {
                         </td>
                         <td><span className="technical-chip">{result.status}</span></td>
                         <td>
-                          {result.resultsPublished ? (
-                            <span className="font-mono text-white">{result.score} pts</span>
-                          ) : (
-                            <span className="technical-chip border-amber-400/40 text-amber-200">Hidden</span>
-                          )}
+                          <span className="font-mono text-white">{result.score ?? 0} / {result.totalMarks}</span>
                         </td>
                         <td>
-                          {result.resultsPublished ? (
-                            <span className="font-mono font-semibold text-cyan-300">{result.percentage}%</span>
-                          ) : (
-                            <span className="text-xs text-blue-200/40">—</span>
-                          )}
+                          <span className="font-mono font-semibold text-cyan-300">{result.percentage ?? 0}%</span>
                         </td>
                         <td>
                           <span className={result.violationCount > 0 ? "font-semibold text-amber-300" : "text-emerald-300"}>

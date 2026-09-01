@@ -164,18 +164,14 @@ export const tableRouter = router({
       ]);
       if (!source || !target) throw new TRPCError({ code: "NOT_FOUND", message: "Source or target table not found." });
 
-      const transferSet = new Set(input.studentUserIds);
-      const newSourceIds = source.studentUserIds.filter(id => !transferSet.has(id));
+      // Copy students to target table WITHOUT removing from source
       const newTargetIds = Array.from(new Set([...target.studentUserIds, ...input.studentUserIds]));
 
-      await Promise.all([
-        c.studentTables.updateOne({ id: source.id }, { $set: { studentUserIds: newSourceIds, updatedAt: new Date() } }),
-        c.studentTables.updateOne({ id: target.id }, { $set: { studentUserIds: newTargetIds, updatedAt: new Date() } }),
-      ]);
+      await c.studentTables.updateOne({ id: target.id }, { $set: { studentUserIds: newTargetIds, updatedAt: new Date() } });
 
       return {
         success: true,
-        message: `Transferred ${input.studentUserIds.length} student(s) from "${source.name}" to "${target.name}".`,
+        message: `Copied ${input.studentUserIds.length} student(s) from "${source.name}" to "${target.name}". Students remain in the original table.`,
         data: { sourceTableId: source.id, targetTableId: target.id },
       };
     }),
