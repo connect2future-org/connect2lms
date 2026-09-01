@@ -12,7 +12,18 @@ import { downloadQuestionTemplate, parseQuestionImportFile, downloadRosterTempla
 
 const emptyStudent = { name: "", email: "", username: "", usn: "", studentId: "", branch: "", semester: "", section: "", className: "", temporaryPassword: "" };
 const emptyQuestion: AssessmentQuestionDraft = { questionText: "", firstOption: "", secondOption: "", thirdOption: "", fourthOption: "", correctOption: "a" };
-const emptyAssessment = { title: "", durationMinutes: "30", accessCode: "", questions: [emptyQuestion], editingId: null as number | null };
+function defaultStartAt() {
+  const d = new Date();
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d.toISOString().slice(0, 16);
+}
+function defaultEndAt() {
+  const d = new Date(Date.now() + 7 * 24 * 60 * 60_000);
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d.toISOString().slice(0, 16);
+}
+
+const emptyAssessment = { title: "", durationMinutes: "30", startAt: defaultStartAt(), endAt: defaultEndAt(), accessCode: "", questions: [emptyQuestion], editingId: null as number | null };
 
 type StudentRow = { id: number; name: string | null; email: string | null; status: string; profile?: { importBatchId?: number | null; studentId?: string | null; usn?: string | null; branch?: string | null; semester?: string | null; section?: string | null; className?: string | null } };
 type PublishTarget = { assessmentId: number; title: string };
@@ -108,7 +119,22 @@ export default function TeacherDashboard() {
   const updateQuestion = (index: number, key: keyof AssessmentQuestionDraft, value: string) => setAssessmentForm(current => ({ ...current, questions: current.questions.map((item, itemIndex) => itemIndex === index ? { ...item, [key]: value } : item) }));
   const importQuestions = async (file: File | undefined) => { if (!file) return; try { const questions = await parseQuestionImportFile(file); setAssessmentForm(current => ({ ...current, questions })); toast.success(`${questions.length} questions loaded into the MCQ builder.`); } catch (error) { toast.error(error instanceof Error ? error.message : "Unable to extract questions from this file."); } finally { setQuestionFileInputKey(key => key + 1); } };
 
-  const submitAssessment = (event: React.FormEvent) => { event.preventDefault(); const startAt = new Date(); const endAt = new Date(startAt.getTime() + 90 * 60_000); const payload = { title: assessmentForm.title, startAt, endAt, durationMinutes: Number(assessmentForm.durationMinutes), maxAttempts: 1, accessCodeEnabled: Boolean(assessmentForm.accessCode), accessCode: assessmentForm.accessCode || undefined, randomizeQuestions: true, randomizeOptions: true, negativeMarking: false, antiCheat: { requireFullscreen: true, detectTabSwitch: true, detectWindowBlur: true, detectFullscreenExit: true, detectClipboard: true, detectContextMenu: true, detectShortcuts: true, violationThreshold: 5, autoSubmitOnThreshold: true }, questions: toAssessmentQuestions(assessmentForm.questions) }; if (assessmentForm.editingId) updateAssessment.mutate({ ...payload, assessmentId: assessmentForm.editingId }); else createAssessment.mutate(payload); };
+  const submitAssessment = (event: React.FormEvent) => {
+    event.preventDefault();
+    const startAt = new Date(assessmentForm.startAt);
+    const endAt = new Date(assessmentForm.endAt);
+    if (isNaN(startAt.getTime()) || isNaN(endAt.getTime())) {
+      toast.error("Please enter valid start and end window dates.");
+      return;
+    }
+    if (endAt <= startAt) {
+      toast.error("The end window date/time must be after the start window date/time.");
+      return;
+    }
+    const payload = { title: assessmentForm.title, startAt, endAt, durationMinutes: Number(assessmentForm.durationMinutes), maxAttempts: 1, accessCodeEnabled: Boolean(assessmentForm.accessCode), accessCode: assessmentForm.accessCode || undefined, randomizeQuestions: true, randomizeOptions: true, negativeMarking: false, antiCheat: { requireFullscreen: true, detectTabSwitch: true, detectWindowBlur: true, detectFullscreenExit: true, detectClipboard: true, detectContextMenu: true, detectShortcuts: true, violationThreshold: 5, autoSubmitOnThreshold: true }, questions: toAssessmentQuestions(assessmentForm.questions) };
+    if (assessmentForm.editingId) updateAssessment.mutate({ ...payload, assessmentId: assessmentForm.editingId });
+    else createAssessment.mutate(payload);
+  };
   const publishSelected = () => { if (!publishTarget) return; if (!selectedStudentCount) { toast.error("Select at least one active student in your teaching scope."); return; } publish.mutate({ assessmentId: publishTarget.assessmentId, target: "SELECTED_ACTIVE", studentIds: selectedStudentIds }); };
 
   const tablesList = (tablesQuery.data?.data ?? []) as Array<{ id: number; name: string; students: StudentRow[] }>;
@@ -177,14 +203,24 @@ export default function TeacherDashboard() {
           </div>
 
           <form onSubmit={submitAssessment} className="mt-4 space-y-4">
-            <div className="grid gap-3 sm:grid-cols-3">
-              <label className="text-xs font-semibold text-blue-100/75 sm:col-span-2">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <label className="text-xs font-semibold text-blue-100/75 lg:col-span-2">
                 Assessment title
                 <Input required value={assessmentForm.title} onChange={(e) => setAssessmentForm((c) => ({ ...c, title: e.target.value }))} className="mt-1 border-white/20 bg-slate-950/40 text-white" placeholder="e.g. Data Structures & Algorithms Midterm" />
               </label>
               <label className="text-xs font-semibold text-blue-100/75">
-                Duration (minutes)
-                <Input required type="number" min={1} max={720} value={assessmentForm.durationMinutes} onChange={(e) => setAssessmentForm((c) => ({ ...c, durationMinutes: e.target.value }))} className="mt-1 border-white/20 bg-slate-950/40 text-white" />
+                Start Window (Opens at)
+                <Input required type="datetime-local" value={assessmentForm.startAt} onChange={(e) => setAssessmentForm((c) => ({ ...c, startAt: e.target.value }))} className="mt-1 border-white/20 bg-slate-950/40 text-white text-xs" />
+              </label>
+              <label className="text-xs font-semibold text-blue-100/75">
+                End Window (Closes at)
+                <Input required type="datetime-local" value={assessmentForm.endAt} onChange={(e) => setAssessmentForm((c) => ({ ...c, endAt: e.target.value }))} className="mt-1 border-white/20 bg-slate-950/40 text-white text-xs" />
+              </label>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="text-xs font-semibold text-blue-100/75">
+                Test Duration (Minutes per attempt)
+                <Input required type="number" min={1} max={720} value={assessmentForm.durationMinutes} onChange={(e) => setAssessmentForm((c) => ({ ...c, durationMinutes: e.target.value }))} className="mt-1 border-white/20 bg-slate-950/40 text-white" placeholder="30" />
               </label>
             </div>
 
@@ -409,9 +445,15 @@ export default function TeacherDashboard() {
                               <>
                                 <button
                                   onClick={() => {
+                                    const sDate = new Date(test.startAt);
+                                    sDate.setMinutes(sDate.getMinutes() - sDate.getTimezoneOffset());
+                                    const eDate = new Date(test.endAt);
+                                    eDate.setMinutes(eDate.getMinutes() - eDate.getTimezoneOffset());
                                     setAssessmentForm({
                                       title: test.title,
                                       durationMinutes: String(test.durationMinutes),
+                                      startAt: sDate.toISOString().slice(0, 16),
+                                      endAt: eDate.toISOString().slice(0, 16),
                                       accessCode: test.accessCode ?? "",
                                       editingId: test.id,
                                       questions: (test.questions ?? []).map((question) => ({

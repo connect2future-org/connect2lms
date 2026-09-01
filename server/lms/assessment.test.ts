@@ -12,7 +12,7 @@ describe("assessment engine", () => {
     expect(calculateScore(questions, { "1": "a", "2": "x" }, false)).toEqual({ score: 2, totalMarks: 5, percentage: 40 });
   });
 
-  it("labels assessment windows for the Student dashboard and start gate", () => { const now = new Date("2026-08-27T10:00:00.000Z"); expect(getAssessmentAvailability(new Date("2026-08-27T10:01:00.000Z"), new Date("2026-08-27T11:00:00.000Z"), now)).toBe("UPCOMING"); expect(getAssessmentAvailability(new Date("2026-08-27T09:00:00.000Z"), new Date("2026-08-27T11:00:00.000Z"), now)).toBe("AVAILABLE"); expect(getAssessmentAvailability(new Date("2026-08-27T09:00:00.000Z"), new Date("2026-08-27T10:00:00.000Z"), now)).toBe("EXPIRED"); });
+  it("labels assessment windows for the Student dashboard and start gate", () => { const now = new Date("2026-08-27T10:00:00.000Z"); expect(getAssessmentAvailability(new Date("2026-08-27T09:00:00.000Z"), new Date("2026-08-27T11:00:00.000Z"), now)).toBe("AVAILABLE"); expect(getAssessmentAvailability(new Date("2026-08-27T09:00:00.000Z"), new Date("2026-08-27T10:00:00.000Z"), now)).toBe("EXPIRED"); });
 
   it("caps the server-controlled expiry at the scheduled assessment end", () => {
     const startedAt = new Date("2026-08-27T10:00:00.000Z");

@@ -32,8 +32,8 @@ export function isExpired(expiresAt: Date, now = new Date()) {
 }
 
 export function getAssessmentAvailability(startAt: Date, endAt: Date, now = new Date()) {
-  if (endAt.getTime() <= now.getTime()) return "EXPIRED" as const;
-  if (startAt.getTime() > now.getTime()) return "UPCOMING" as const;
+  if (endAt && endAt.getTime() <= now.getTime()) return "EXPIRED" as const;
+  if (startAt && startAt.getTime() > now.getTime()) return "UPCOMING" as const;
   return "AVAILABLE" as const;
 }
 
